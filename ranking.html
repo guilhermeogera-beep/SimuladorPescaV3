@@ -116,6 +116,14 @@ function montarFiltros(boxId, dados, atual, onSel){
   const vistos=[]; dados.forEach(r=>{ if(r.sim!=null && vistos.indexOf(r.sim)<0) vistos.push(r.sim); });
   vistos.forEach(s=>add(s, nomePeixe(s)));
 }
+// ── filtros com TODAS as espécies fixas (sempre aparecem, mesmo sem resultado) ──
+const ESPECIES=[{id:'pirarara',nome:'Pirarara'},{id:'tambaqui',nome:'Tambacu'},{id:'tucunare',nome:'Tucunaré'},{id:'dourado',nome:'Dourado'},{id:'trairao',nome:'Pirarara kids'},{id:'jau',nome:'Jaú'}];
+function montarFiltrosFixo(boxId, atual, onSel){
+  const box=document.getElementById(boxId); box.innerHTML='';
+  const add=(val,txt)=>{ const b=document.createElement('button'); b.className='filtro'+(val===atual?' ativo':''); b.textContent=txt; b.onclick=()=>onSel(val); box.appendChild(b); };
+  add('todos','Todas');
+  ESPECIES.forEach(e=>add(e.id, e.nome));
+}
 
 /* ══════════ ENROLA MAIS (por metros) ══════════ */
 let filtroEnrola='todos';
@@ -136,7 +144,7 @@ function atualizarMediaLinha(){
 function renderEnrola(){
   atualizarMediaLinha();
   const todos=carregarEnrola().filter(r=>nomeValido(r.nome));
-  montarFiltros('filtrosEnrola', todos, filtroEnrola, selEnrola);
+  montarFiltrosFixo('filtrosEnrola', filtroEnrola, selEnrola);   // todas as espécies sempre visíveis
   let lista = filtroEnrola==='todos' ? todos : todos.filter(r=>r.sim===filtroEnrola);
   lista.sort((a,b)=>(b.metros||0)-(a.metros||0));
   const el=document.getElementById('listaEnrola');
