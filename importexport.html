@@ -50,9 +50,27 @@ h1{font-size:1.25rem;color:var(--accent);font-weight:800;letter-spacing:1px;marg
     </div>
   </div>
 
-  <div id="msg"></div>
+  <div class="grupo">
+    <div class="grupo-tit">🎬 Curvas das simulações (curvas.json)</div>
+    <div class="grupo-sub">Exportar baixa as curvas publicadas. Importar aplica o arquivo NESTE aparelho.</div>
+    <div class="linha-btn">
+      <button class="btn btn-green" onclick="expCurvas()">⬇ Exportar</button>
+      <button class="btn btn-green" onclick="document.getElementById('impCurvas').click()">⬆ Importar</button>
+      <input type="file" id="impCurvas" accept="application/json,.json" style="display:none" onchange="impCurvasFile(event)">
+    </div>
+  </div>
 
-  <div class="soon" style="margin-top:6px;">⚙️ <b>Configurações</b> e <b>curvas das simulações</b> entram aqui em breve, junto com as páginas de Gerador e Motor (é onde esses dados são definidos).</div>
+  <div class="grupo">
+    <div class="grupo-tit">⚙️ Configurações (config.json)</div>
+    <div class="grupo-sub">Calibração, gerador e sincronia. Importar aplica NESTE aparelho (o limite de linha é local e não entra).</div>
+    <div class="linha-btn">
+      <button class="btn btn-green" onclick="expConfig()">⬇ Exportar</button>
+      <button class="btn btn-green" onclick="document.getElementById('impConfig').click()">⬆ Importar</button>
+      <input type="file" id="impConfig" accept="application/json,.json" style="display:none" onchange="impConfigFile(event)">
+    </div>
+  </div>
+
+  <div id="msg"></div>
 </div>
 
 <script>
@@ -73,6 +91,45 @@ function impEnrolaFile(ev){
     localStorage.setItem('simpesca2_ranking', JSON.stringify(atual));
     msg(add+' jogada(s) importada(s)'+(nova.length-add>0?' · '+(nova.length-add)+' repetida(s) ignorada(s)':'')+'.');
   }catch(err){ msg('Arquivo inválido — use um ranking de Enrola mais (.json).'); } };
+  r.readAsText(f);
+}
+
+// ── Curvas (curvas.json) e Configurações (config.json) ──
+const ESPECIES_IDS=['pirarara','tambaqui','tucunare','dourado','trairao','jau'];
+const DESAFIOS=[{gh:'desafio',id:'pirarara'},{gh:'desafio_tambaqui',id:'tambaqui'}];
+async function baixarPublicado(arquivo){   // export = baixa o arquivo PUBLICADO (curvas.json/config.json)
+  try{ const r=await fetch(arquivo,{cache:'no-store'}); if(!r.ok) throw 0; const txt=await r.text(); const blob=new Blob([txt],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=arquivo; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); msg('Exportado: '+arquivo+'.'); }
+  catch(e){ msg('Não consegui ler '+arquivo+' (offline?).'); }
+}
+function expCurvas(){ baixarPublicado('curvas.json'); }
+function expConfig(){ baixarPublicado('config.json'); }
+function impCurvasFile(ev){
+  const f=ev.target.files[0]; ev.target.value=''; if(!f) return;
+  const r=new FileReader();
+  r.onload=e=>{ try{
+    const d=JSON.parse(e.target.result); const cur=(d&&d.curvas)?d.curvas:d; if(!cur||typeof cur!=='object') throw 0;
+    let n=0;
+    ESPECIES_IDS.forEach(id=>{ const cv=cur[id]; if(Array.isArray(cv)){ localStorage.setItem('simpesca2_pontos_'+id, JSON.stringify(cv)); n++; } });
+    DESAFIOS.forEach(ds=>{ const cv=cur[ds.gh]; if(Array.isArray(cv)){ localStorage.setItem('simpesca2_aleat_pontos_'+ds.id, JSON.stringify(cv)); n++; } });
+    if(!n) throw 0;
+    msg('Curvas aplicadas neste aparelho: '+n+' peixe(s).');
+  }catch(err){ msg('Arquivo inválido — use um curvas.json.'); } };
+  r.readAsText(f);
+}
+function impConfigFile(ev){
+  const f=ev.target.files[0]; ev.target.value=''; if(!f) return;
+  const r=new FileReader();
+  r.onload=e=>{ try{
+    const d=JSON.parse(e.target.result); if(!d || (!d.cal && !d.gen && !d.sync)) throw 0;
+    const set=(k,v)=>{ if(v!=null) localStorage.setItem(k,v); };
+    if(d.cal){ const c=d.cal;
+      set('simpesca2_cal_mpv',c.mpv); set('simpesca2_cal_rpmmin',c.rpmmin); set('simpesca2_cal_rpmmax',c.rpmmax);
+      set('simpesca2_cal_freioa',c.freioa); set('simpesca2_cal_freiorepmin',c.freiorepmin); set('simpesca2_cal_freiorepmax',c.freiorepmax);
+      set('simpesca2_rank_pesoexp',c.pesoexp); set('simpesca2_cal_inv',c.inv); }   // limite NÃO entra (é local)
+    if(d.gen && (d.versao||0)>=2){ Object.keys(d.gen).forEach(id=>{ const g=d.gen[id]; if(g&&typeof g==='object') Object.keys(g).forEach(key=>set('simpesca2_gen_'+id+'_'+key, g[key])); }); }
+    if(d.sync){ Object.keys(d.sync).forEach(id=>set('simpesca2_sync_'+id, d.sync[id])); }
+    msg('Configurações aplicadas neste aparelho.');
+  }catch(err){ msg('Arquivo inválido — use um config.json.'); } };
   r.readAsText(f);
 }
 
