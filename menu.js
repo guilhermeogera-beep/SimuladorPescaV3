@@ -17,7 +17,7 @@
     {ic:'🎚️', nome:'Controle manual',           pg:'motor.html#controle',   id:'controle'},
     {ic:'🔧', nome:'Configuração do motor',     pg:'motor.html#motor',      id:'motor'},
     {ic:'🎬', nome:'Gerador de simulações curtas', pg:'motor.html#gerador', id:'gerador'},
-    {ic:'🐟', nome:'Gerador de simulação desafio', pg:'desafio.html', id:'desafio'},
+    {ic:'🐟', nome:'Gerador de simulação desafio', pg:'desafio.html#gerador', id:'gerador-desafio'},
     {ic:'🏆', nome:'Ranking',                    pg:'ranking.html',         id:'ranking'},
     {ic:'🔗', nome:'Conexão GitHub',             pg:'github.html',          id:'github'},
     {ic:'↔️', nome:'Importação / exportação',    pg:'importexport.html',    id:'importexport'}

@@ -128,13 +128,50 @@ input[type="range"]::-webkit-slider-thumb{height:24px;width:24px;border-radius:5
   .sim-controls{gap:5px;}
   .cont3>div{flex:1 1 100% !important;min-width:0 !important;}
 }
+[data-sec]{display:none;}   /* seções por hash: jogar (tela do peixe) e gerador (curva) */
 </style>
 </head>
 <body>
-<script>window.MENU_ATUAL='desafio'; window.PAGINA_TEM_BLE=true;</script>
+<script>window.MENU_ATUAL=(location.hash==='#gerador')?'gerador-desafio':'desafio'; window.PAGINA_TEM_BLE=true;</script>
 <script src="menu.js"></script>
 
-<div class="card">
+<!-- ⏱ TELA DE JOGAR (seleção do peixe) -->
+<div id="secJogar" data-sec="jogar" style="max-width:760px;margin:0 auto;">
+  <div style="text-align:center;font-size:1.05rem;font-weight:800;color:var(--accent);letter-spacing:0.5px;margin:8px 0 20px;">⏱ Quem pega o peixe mais rápido</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;">
+    <div onclick="abrirPreJogo(0)" style="cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px 16px;text-align:center;transition:border-color .2s,transform .12s;" onpointerover="this.style.borderColor='var(--accent)'" onpointerout="this.style.borderColor='var(--border)'" onpointerdown="this.style.transform='scale(0.98)'" onpointerup="this.style.transform=''">
+      <svg viewBox="0 0 220 110" width="100%" height="92" style="max-width:200px">
+        <path d="M18 55 C40 22,130 20,168 44 L168 66 C130 90,40 88,18 55 Z" fill="#5b6b78"/>
+        <path d="M40 70 C90 88,140 82,168 66 C130 84,60 86,40 70 Z" fill="#8a99a6" opacity="0.55"/>
+        <path d="M18 55 C24 44,34 40,44 42 C40 55,40 58,44 70 C34 72,24 66,18 55 Z" fill="#4a5966"/>
+        <path d="M20 58 C6 62,2 72,8 82" fill="none" stroke="#c9d4dd" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M22 52 C10 50,4 46,4 38" fill="none" stroke="#c9d4dd" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M96 24 L110 6 L120 26 Z" fill="#4a5966"/>
+        <path d="M168 44 C186 34,204 30,214 26 C206 46,206 64,214 84 C204 80,186 76,168 66 Z" fill="#d43a2a"/>
+        <circle cx="40" cy="50" r="4" fill="#0d151d"/><circle cx="41.5" cy="48.5" r="1.3" fill="#fff"/>
+      </svg>
+      <div style="font-size:1.35rem;font-weight:800;color:#fff;margin-top:10px;">Pirarará</div>
+      <div style="font-size:0.74rem;color:var(--text-dim);margin-top:2px;text-transform:uppercase;letter-spacing:1px;">Desafio</div>
+      <button class="btn btn-green" style="margin-top:14px;pointer-events:none;">▶ Jogar</button>
+    </div>
+    <div onclick="abrirPreJogo(1)" style="cursor:pointer;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px 16px;text-align:center;transition:border-color .2s,transform .12s;" onpointerover="this.style.borderColor='var(--accent)'" onpointerout="this.style.borderColor='var(--border)'" onpointerdown="this.style.transform='scale(0.98)'" onpointerup="this.style.transform=''">
+      <svg viewBox="0 0 200 130" width="100%" height="92" style="max-width:180px">
+        <path d="M30 65 C30 25,120 18,150 55 C155 62,155 68,150 75 C120 112,30 105,30 65 Z" fill="#6b7683"/>
+        <path d="M55 92 C95 108,135 96,150 75 C120 100,70 100,55 92 Z" fill="#c48a3a" opacity="0.5"/>
+        <path d="M150 55 C168 48,182 44,190 42 C184 65,184 65,190 88 C182 86,168 82,150 75 Z" fill="#4f5a67"/>
+        <path d="M92 22 C110 12,128 16,138 30 C118 26,104 24,92 22 Z" fill="#4f5a67"/>
+        <path d="M78 104 C86 116,100 116,106 104 Z" fill="#4f5a67"/>
+        <circle cx="52" cy="55" r="4.5" fill="#0d151d"/><circle cx="53.5" cy="53.5" r="1.4" fill="#fff"/>
+      </svg>
+      <div style="font-size:1.35rem;font-weight:800;color:#fff;margin-top:10px;">Tambacu</div>
+      <div style="font-size:0.74rem;color:var(--text-dim);margin-top:2px;text-transform:uppercase;letter-spacing:1px;">Desafio</div>
+      <button class="btn btn-green" style="margin-top:14px;pointer-events:none;">▶ Jogar</button>
+    </div>
+  </div>
+</div>
+
+<!-- GERADOR DA CURVA (abre pelo menu "Gerador de simulação desafio") -->
+<div class="card" data-sec="gerador">
   <div class="secao-titulo"><button class="btn-colapso" id="cfgColBtn" onclick="toggleConfigRow()" title="Ocultar/mostrar os ajustes" style="margin-right:6px;">▾</button><span>⚡</span> Curva da briga (20 min) — role na horizontal pra editar <span id="curvaSyncStatus" class="cal-sub" style="margin-left:auto;text-transform:none;letter-spacing:0;"></span></div>
   <div id="configRow" style="font-size:0.78rem;color:var(--text-dim);margin-bottom:12px;display:flex;gap:20px;flex-wrap:wrap;align-items:center;">
     <span>⏱ <b>Duração:</b> <input type="number" id="duracaoTotalMin" min="1" max="60" step="1" value="25" oninput="salvarDuracaoTotal()" style="width:56px;background:var(--surface);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:monospace;text-align:center;padding:4px 6px;outline:none;"> min</span>
@@ -153,32 +190,7 @@ input[type="range"]::-webkit-slider-thumb{height:24px;width:24px;border-radius:5
   </div>
 </div>
 
-<!-- CONTROLE DE CARRETEL — config GLOBAL (compartilha com o dash + salva no config.json) -->
-<div class="card">
-  <div class="secao-titulo recolhivel" data-cardkey="linha" onclick="toggleCard(this)"><span class="card-chevron">▾</span><span>🎣</span> Controle de Carretel<button onclick="event.stopPropagation(); toggleCarretelBtns()" title="Esconder/mostrar os botões (deixa só as 3 caixas de valores)" style="margin-left:auto;background:none;border:1px solid var(--border);border-radius:5px;color:var(--text-dim);cursor:pointer;font-size:0.62rem;padding:3px 9px;text-transform:none;letter-spacing:0;">🔧 botões</button></div>
-  <div class="cont3" style="display:flex;gap:14px;flex-wrap:wrap;">
-    <div style="flex:1;min-width:120px;background:rgba(0,230,118,0.06);border:1px solid rgba(0,230,118,0.35);border-radius:10px;padding:14px;text-align:center;">
-      <div class="cal-sub">⬆ Ganhos (recolheu)</div>
-      <div class="cal-val metros" id="ctGanhos" style="font-size:2.1rem;margin-top:4px;">0.0 m</div>
-    </div>
-    <div style="flex:1;min-width:120px;background:rgba(255,23,68,0.06);border:1px solid rgba(255,23,68,0.35);border-radius:10px;padding:14px;text-align:center;">
-      <div class="cal-sub">⬇ Perdidos (soltou)</div>
-      <div class="cal-val" id="ctPerdidos" style="font-size:2.1rem;margin-top:4px;color:var(--red);">0.0 m</div>
-    </div>
-    <div style="flex:1;min-width:120px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;">
-      <div class="cal-sub">📍 Linha no carretel (TRAVA)</div>
-      <div class="cal-val cont" id="ctSaldo" style="font-size:2.1rem;margin-top:4px;">0.0 m</div>
-    </div>
-  </div>
-  <div id="carretelCtrls" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
-    <button class="btn btn-yellow" onclick="zerarContadores()">⟲ Zerar contadores</button>
-    <button class="btn btn-accent" onclick="inverterLado()" title="Inverte o sentido do encoder (troca ganhos ⇄ perdidos)">⇄ Inverter lado</button>
-    <div class="cal-campo"><label>🛑 Limite de linha p/ TRAVA (m)</label><input type="number" id="calLimite" step="1" value="-150"></div>
-    <button class="btn btn-green" onclick="salvarLimite()">💾 Salvar limite</button>
-    <span class="cal-sub" id="calSyncStatus" style="align-self:center;"></span>
-    <span class="cal-sub" id="limiteAviso" style="align-self:center;">trava quando <b>|saldo|</b> atinge o limite (pode ser <b>negativo</b>, ex.: -150) · <b>global</b> (sincroniza com o dash)</span>
-  </div>
-</div>
+<!-- Controle de Carretel foi removido daqui (fica na Calibração/Motor) -->
 
 <!-- HUD DO JOGO (cabo-de-guerra) -->
 <div id="jogoHUD">
@@ -943,6 +955,14 @@ document.querySelectorAll('.gen-row input').forEach(el=>el.addEventListener('cha
   for(let i=0;i<NSIMS;i++){ const arr=cv[curvaKey(i)]; if(Array.isArray(arr)&&arr.length){ SIMS[i].pontos=arr.slice().sort((a,b)=>a.t-b.t);
     if(i===0){ const last=SIMS[0].pontos[SIMS[0].pontos.length-1]; if(last&&last.t>1){ DURACAO=Math.round(last.t); const el=document.getElementById('duracaoTotalMin'); if(el) el.value=Math.max(1,Math.round(DURACAO/60)); } }
     salvarPontos(i); renderTicks(i); renderCurva(i); } } } }catch(e){} podeSyncCurva=true; })();
+// ── seções por hash: 'jogar' (tela do peixe, padrão) e 'gerador' (curva) ──
+function mostrarSecao(){
+  const sec=(location.hash||'').replace('#','')||'jogar';
+  document.querySelectorAll('[data-sec]').forEach(el=>{ el.style.display=(el.getAttribute('data-sec')===sec)?'block':'none'; });
+  if(window.menuSetAtivo) window.menuSetAtivo(sec==='gerador'?'gerador-desafio':'desafio');
+}
+window.addEventListener('hashchange', mostrarSecao);
+mostrarSecao();
 </script>
 </body>
 </html>
