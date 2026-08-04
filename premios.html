@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SimPesca — Configuração de prêmios</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#050a0f">
+<style>
+:root{--bg:#050a0f;--card:#0d151d;--border:#1a2736;--accent:#00d4ff;--green:#00e676;--text:#e0e6ed;--dim:#7b8d9e;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.wrap{max-width:640px;margin:0 auto;padding:22px 16px;}
+h1{font-size:1.25rem;color:var(--accent);font-weight:800;letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:9px;}
+.sub{color:var(--dim);font-size:0.82rem;margin-bottom:18px;line-height:1.5;}
+.grupo{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px;}
+.grupo-tit{font-size:0.66rem;letter-spacing:1.5px;color:#7e96ad;text-transform:uppercase;margin-bottom:10px;}
+label.linha{display:flex;align-items:center;gap:10px;padding:8px 0;cursor:pointer;font-size:0.95rem;border-bottom:1px solid rgba(255,255,255,0.03);}
+label.linha:last-child{border-bottom:none;}
+input[type=checkbox]{accent-color:var(--accent);cursor:pointer;width:19px;height:19px;flex-shrink:0;}
+input[type=number]{width:70px;background:#0d151d;border:1px solid var(--accent);border-radius:6px;color:var(--text);font-family:monospace;font-size:0.95rem;padding:5px 6px;text-align:center;outline:none;}
+.svgboia{vertical-align:-0.14em;flex-shrink:0;}
+.dica{font-size:0.72rem;color:var(--dim);margin-top:8px;line-height:1.5;}
+.embreve{opacity:0.6;}
+.tag-embreve{font-size:0.6rem;background:rgba(0,212,255,0.15);color:var(--accent);border:1px solid var(--accent);border-radius:6px;padding:2px 7px;letter-spacing:1px;margin-left:8px;}
+</style>
+</head>
+<body>
+<script>window.MENU_ATUAL='premios';</script>
+<script src="menu.js"></script>
+<div class="wrap">
+  <h1><span>🎁</span> Configuração de prêmios</h1>
+  <div class="sub">Prêmios que aparecem no fim de cada jogo. Salva no aparelho.</div>
+
+  <div class="grupo">
+    <div class="grupo-tit">🎣 Quem enrola mais — prêmios no final</div>
+    <label class="linha"><input type="checkbox" id="cfgPremioBone"> 🧢 "Ganhou boné" acima de
+      <input type="number" id="premioBoneMin" min="0" step="1"> m</label>
+    <label class="linha"><input type="checkbox" id="cfgPremioBoia">
+      <svg width="1em" height="1em" viewBox="0 0 24 24" class="svgboia"><line x1="12" y1="1.5" x2="12" y2="7" stroke="#b00020" stroke-width="2" stroke-linecap="round"/><path d="M4.5 13a7.5 7.5 0 0 1 15 0z" fill="#e11d2a"/><path d="M4.5 13a7.5 7.5 0 0 0 15 0z" fill="#f7f7f7"/><circle cx="12" cy="13" r="7.5" fill="none" stroke="#b00020" stroke-width="1.2"/><circle cx="12" cy="13" r="1.6" fill="#b00020"/></svg> "Ganhou boia" acima de
+      <input type="number" id="premioBoiaMin" min="0" step="1"> m</label>
+    <div class="dica">Quem tirar o prêmio maior (boné) não recebe a mensagem da boia. Deixe o boné com o valor MAIOR (em metros de linha recolhidos).</div>
+  </div>
+
+  <div class="grupo embreve">
+    <div class="grupo-tit">⏱ Quem tira o peixe mais rápido — prêmios <span class="tag-embreve">EM BREVE</span></div>
+    <div class="dica" style="margin-top:0;">Espaço reservado pra premiação do Desafio (por tempo/pontuação). A gente monta isso depois — os controles vão entrar aqui.</div>
+  </div>
+</div>
+
+<script>
+const g=(k,d)=>{ const v=localStorage.getItem(k); return v===null?d:v==='1'; };
+function premioBoneMinVal(){ const v=parseFloat(localStorage.getItem('simpesca2_premio_bone_min')); return isFinite(v)?v:30; }
+function premioBoiaMinVal(){ const v=parseFloat(localStorage.getItem('simpesca2_premio_boia_min')); return isFinite(v)?v:15; }
+function bindCheck(id, chave, padrao){
+  const el=document.getElementById(id); if(!el) return;
+  el.checked=g(chave, padrao);
+  el.addEventListener('change',()=>{ localStorage.setItem(chave, el.checked?'1':'0'); });
+}
+function bindNum(id, chave, getVal){
+  const el=document.getElementById(id); if(!el) return;
+  el.value=getVal();
+  el.addEventListener('change',()=>{ const v=parseFloat(el.value); if(isFinite(v)&&v>=0) localStorage.setItem(chave, v); else el.value=getVal(); });
+}
+bindCheck('cfgPremioBone','simpesca2_hud_premio_bone',true);
+bindCheck('cfgPremioBoia','simpesca2_hud_premio_boia',true);
+bindNum('premioBoneMin','simpesca2_premio_bone_min',premioBoneMinVal);
+bindNum('premioBoiaMin','simpesca2_premio_boia_min',premioBoiaMinVal);
+</script>
+</body>
+</html>

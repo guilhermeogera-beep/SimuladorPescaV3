@@ -13,6 +13,7 @@
   // --- itens do menu lateral (drawer) ---
   const LINKS=[
     {ic:'⚙️', nome:'Configuração de exibição', pg:'exibicao.html',        id:'exibicao'},
+    {ic:'🎁', nome:'Configuração de prêmios',   pg:'premios.html',         id:'premios'},
     {ic:'📏', nome:'Calibração do encoder',     pg:'motor.html#calibracao', id:'calibracao'},
     {ic:'🎚️', nome:'Controle manual',           pg:'motor.html#controle',   id:'controle'},
     {ic:'🔧', nome:'Configuração do motor',     pg:'motor.html#motor',      id:'motor'},

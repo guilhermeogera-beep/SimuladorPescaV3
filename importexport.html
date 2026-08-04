@@ -19,6 +19,8 @@ h1{font-size:1.25rem;color:var(--accent);font-weight:800;letter-spacing:1px;marg
 .linha-btn{display:flex;gap:10px;flex-wrap:wrap;}
 .btn{padding:11px 18px;border:1px solid;border-radius:8px;font-family:inherit;font-size:0.8rem;font-weight:700;cursor:pointer;background:transparent;letter-spacing:0.5px;}
 .btn-green{border-color:var(--green);color:var(--green);}
+.btn-red{border-color:var(--red);color:var(--red);}
+select{width:100%;margin-bottom:10px;background:#0a1018;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-family:inherit;font-size:0.9rem;outline:none;}
 .soon{background:#0d151d;border:1px dashed #1a2736;border-radius:12px;padding:16px;color:var(--dim);font-size:0.8rem;line-height:1.6;}
 #msg{margin-top:6px;font-size:0.85rem;font-weight:700;min-height:1.1em;color:var(--green);}
 </style>
@@ -51,8 +53,8 @@ h1{font-size:1.25rem;color:var(--accent);font-weight:800;letter-spacing:1px;marg
   </div>
 
   <div class="grupo">
-    <div class="grupo-tit">🎬 Curvas das simulações (curvas.json)</div>
-    <div class="grupo-sub">Exportar baixa as curvas publicadas. Importar aplica o arquivo NESTE aparelho.</div>
+    <div class="grupo-tit">🎬 Todas as curvas (curvas.json)</div>
+    <div class="grupo-sub">Exportar gera o curvas.json completo (com suas edições locais). Importar aplica NESTE aparelho.</div>
     <div class="linha-btn">
       <button class="btn btn-green" onclick="expCurvas()">⬇ Exportar</button>
       <button class="btn btn-green" onclick="document.getElementById('impCurvas').click()">⬆ Importar</button>
@@ -67,6 +69,27 @@ h1{font-size:1.25rem;color:var(--accent);font-weight:800;letter-spacing:1px;marg
       <button class="btn btn-green" onclick="expConfig()">⬇ Exportar</button>
       <button class="btn btn-green" onclick="document.getElementById('impConfig').click()">⬆ Importar</button>
       <input type="file" id="impConfig" accept="application/json,.json" style="display:none" onchange="impConfigFile(event)">
+    </div>
+  </div>
+
+  <div class="grupo">
+    <div class="grupo-tit">📈 Uma curva por peixe</div>
+    <div class="grupo-sub">Exportar / importar / apagar a curva de UM peixe (ou de um desafio). Inclui suas edições locais.</div>
+    <select id="selSim">
+      <option value="pirarara">Pirarara</option>
+      <option value="tambaqui">Tambacu</option>
+      <option value="tucunare">Tucunaré</option>
+      <option value="dourado">Dourado</option>
+      <option value="trairao">Pirarara kids</option>
+      <option value="jau">Jaú</option>
+      <option value="desafio">🎯 Desafio Pirarará</option>
+      <option value="desafio_tambaqui">🎯 Desafio Tambacu</option>
+    </select>
+    <div class="linha-btn">
+      <button class="btn btn-green" onclick="expUmaCurva()">⬇ Exportar</button>
+      <button class="btn btn-green" onclick="document.getElementById('impUmaCurva').click()">⬆ Importar</button>
+      <input type="file" id="impUmaCurva" accept="application/json,.json" style="display:none" onchange="impUmaCurvaFile(event)">
+      <button class="btn btn-red" onclick="limparUmaCurva()">🗑 Limpar</button>
     </div>
   </div>
 
@@ -97,12 +120,23 @@ function impEnrolaFile(ev){
 // ── Curvas (curvas.json) e Configurações (config.json) ──
 const ESPECIES_IDS=['pirarara','tambaqui','tucunare','dourado','trairao','jau'];
 const DESAFIOS=[{gh:'desafio',id:'pirarara'},{gh:'desafio_tambaqui',id:'tambaqui'}];
-async function baixarPublicado(arquivo){   // export = baixa o arquivo PUBLICADO (curvas.json/config.json)
-  try{ const r=await fetch(arquivo,{cache:'no-store'}); if(!r.ok) throw 0; const txt=await r.text(); const blob=new Blob([txt],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=arquivo; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); msg('Exportado: '+arquivo+'.'); }
-  catch(e){ msg('Não consegui ler '+arquivo+' (offline?).'); }
+const GEN_KEYS=['corrida','minpux','fadiga','puxada','saque','fisdur','intens','espaco','freiomax','fisfisdur'];
+let curvasPub={};   // curvas publicadas (fallback pra peixes sem edição local)
+(async()=>{ try{ const r=await fetch('curvas.json',{cache:'no-store'}); if(r.ok){ const d=await r.json(); curvasPub=(d&&d.curvas)||{}; } }catch(e){} })();
+function lsCurva(val){ return (val==='desafio')?'simpesca2_aleat_pontos_pirarara':(val==='desafio_tambaqui')?'simpesca2_aleat_pontos_tambaqui':('simpesca2_pontos_'+val); }
+function curvaDe(val){   // edição LOCAL primeiro; senão a curva publicada
+  try{ const r=localStorage.getItem(lsCurva(val)); if(r){ const d=JSON.parse(r); if(Array.isArray(d)&&d.length) return d; } }catch(e){}
+  return curvasPub[val]||[];
 }
-function expCurvas(){ baixarPublicado('curvas.json'); }
-function expConfig(){ baixarPublicado('config.json'); }
+// ── uma curva por peixe (seletor) ──
+function expUmaCurva(){ const val=document.getElementById('selSim').value; const c=curvaDe(val); baixar('curva_'+val+'.json',{versao:2,tipo:'pontos',especie:val,pontos:c}); msg('Curva exportada: '+val+' ('+c.length+' pontos).'); }
+function impUmaCurvaFile(ev){ const f=ev.target.files[0]; ev.target.value=''; if(!f) return; const r=new FileReader(); r.onload=e=>{ try{ const d=JSON.parse(e.target.result); const pts=Array.isArray(d)?d:(Array.isArray(d.pontos)?d.pontos:null); if(!pts) throw 0; const val=document.getElementById('selSim').value; localStorage.setItem(lsCurva(val), JSON.stringify(pts)); msg('Curva importada em '+val+': '+pts.length+' pontos.'); }catch(err){ msg('Arquivo inválido — use uma curva exportada (.json).'); } }; r.readAsText(f); }
+function limparUmaCurva(){ const val=document.getElementById('selSim').value; if(!confirm('Apagar a curva de '+val+' (neste aparelho)?')) return; localStorage.removeItem(lsCurva(val)); msg('Curva de '+val+' apagada (local).'); }
+// ── todas as curvas (curvas.json) ──
+function expCurvas(){ const curvas={}; ESPECIES_IDS.forEach(id=>{ const c=curvaDe(id); if(c&&c.length) curvas[id]=c; }); DESAFIOS.forEach(ds=>{ const c=curvaDe(ds.gh); if(c&&c.length) curvas[ds.gh]=c; }); baixar('curvas.json',{versao:1,tipo:'curvas_todas',curvas}); msg('curvas.json exportado ('+Object.keys(curvas).length+' curvas).'); }
+// ── config (config.json) ──
+function calNum(k,def){ const v=parseFloat(localStorage.getItem(k)); return isFinite(v)?v:def; }
+function expConfig(){ const cal={mpv:calNum('simpesca2_cal_mpv',34),rpmmin:calNum('simpesca2_cal_rpmmin',1100),rpmmax:calNum('simpesca2_cal_rpmmax',2200),freioa:calNum('simpesca2_cal_freioa',12),freiorepmin:calNum('simpesca2_cal_freiorepmin',2),freiorepmax:calNum('simpesca2_cal_freiorepmax',12),pesoexp:calNum('simpesca2_rank_pesoexp',1),inv:localStorage.getItem('simpesca2_cal_inv')||'1'}; const gen={}; ESPECIES_IDS.forEach(id=>{ const o={}; GEN_KEYS.forEach(k=>{ const v=localStorage.getItem('simpesca2_gen_'+id+'_'+k); if(v!=null) o[k]=v; }); if(Object.keys(o).length) gen[id]=o; }); const sync={}; ESPECIES_IDS.forEach(id=>{ sync[id]=localStorage.getItem('simpesca2_sync_'+id)||'0'; }); baixar('config.json',{versao:2,tipo:'config',cal,gen,sync}); msg('config.json exportado.'); }
 function impCurvasFile(ev){
   const f=ev.target.files[0]; ev.target.value=''; if(!f) return;
   const r=new FileReader();

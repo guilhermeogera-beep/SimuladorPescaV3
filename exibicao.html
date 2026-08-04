@@ -42,16 +42,6 @@ input[type=number]{width:70px;background:#0d151d;border:1px solid var(--accent);
   </div>
 
   <div class="grupo">
-    <div class="grupo-tit">🎁 Prêmios no final</div>
-    <label class="linha"><input type="checkbox" id="cfgPremioBone"> 🧢 "Ganhou boné" acima de
-      <input type="number" id="premioBoneMin" min="0" step="1"> m</label>
-    <label class="linha"><input type="checkbox" id="cfgPremioBoia">
-      <svg width="1em" height="1em" viewBox="0 0 24 24" class="svgboia"><line x1="12" y1="1.5" x2="12" y2="7" stroke="#b00020" stroke-width="2" stroke-linecap="round"/><path d="M4.5 13a7.5 7.5 0 0 1 15 0z" fill="#e11d2a"/><path d="M4.5 13a7.5 7.5 0 0 0 15 0z" fill="#f7f7f7"/><circle cx="12" cy="13" r="7.5" fill="none" stroke="#b00020" stroke-width="1.2"/><circle cx="12" cy="13" r="1.6" fill="#b00020"/></svg> "Ganhou boia" acima de
-      <input type="number" id="premioBoiaMin" min="0" step="1"> m</label>
-    <div class="dica">Quem tirar o prêmio maior (boné) não recebe a mensagem da boia. Deixe o boné com o valor MAIOR.</div>
-  </div>
-
-  <div class="grupo">
     <div class="grupo-tit">⚡ Corrente do motor (segurança)</div>
     <label class="linha"><input type="checkbox" id="cfgCorrente"> Mostrar a corrente na tela do jogo</label>
     <label class="linha"><input type="checkbox" id="cfgJam"> Pausar automático se a linha travar (corrente alta)</label>
@@ -77,8 +67,6 @@ const ESPECIES=[
   {id:'jau',      nome:'Jaú'}
 ];
 const g=(k,d)=>{ const v=localStorage.getItem(k); return v===null?d:v==='1'; };
-function premioBoneMinVal(){ const v=parseFloat(localStorage.getItem('simpesca2_premio_bone_min')); return isFinite(v)?v:30; }
-function premioBoiaMinVal(){ const v=parseFloat(localStorage.getItem('simpesca2_premio_boia_min')); return isFinite(v)?v:15; }
 
 // liga um checkbox a uma chave do localStorage ('1'/'0')
 function bindCheck(id, chave, padrao){
@@ -99,10 +87,7 @@ bindCheck('cfgCarretel','simpesca2_hud_carretel',true);
 bindCheck('cfgSync','simpesca2_hud_sync',true);
 bindCheck('cfgPeso','simpesca2_hud_peso',true);
 bindCheck('cfgTeste','simpesca2_mostrar_teste',true);
-bindCheck('cfgPremioBone','simpesca2_hud_premio_bone',true);
-bindCheck('cfgPremioBoia','simpesca2_hud_premio_boia',true);
-bindNum('premioBoneMin','simpesca2_premio_bone_min',premioBoneMinVal);
-bindNum('premioBoiaMin','simpesca2_premio_boia_min',premioBoiaMinVal);
+// prêmios migraram para a página "Configuração de prêmios" (premios.html)
 
 // ⚡ corrente / travamento
 function jamLimiteVal(){ const v=parseFloat(localStorage.getItem('simpesca2_jam_limite')); return isFinite(v)?v:30; }
