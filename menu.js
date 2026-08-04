@@ -81,13 +81,14 @@
     return `<button class="${cl}" ${onclick} title="${j.nome}"><span>${j.ic}</span><span class="mnu-jogo-txt">${j.curto}</span></button>`;
   }).join('');
   const conectarHtml = temBLE ? `<button id="mnuConectar" onclick="(window.conectarBLE&&window.conectarBLE())">🔌 Conectar</button>` : '';
+  const rankHtml = `<button class="mnu-jogo" onclick="location.href='ranking.html#resumo'" title="Ranking (resumo)"><span>🏆</span></button>`;   // ranking rápido/resumido no topo
   const tituloAtual = (LINKS.concat(JOGOS.map(j=>({id:j.id,nome:j.nome}))).find(x=>x.id===atual)||{}).nome || 'SimPesca';
 
   const bar=document.createElement('div'); bar.id='mnuTopbar';
   bar.innerHTML =
     `<button id="mnuHamb" aria-label="Menu" title="Menu"><span></span><span></span><span></span></button>`+
     `<span id="mnuTitulo">${tituloAtual}</span>`+
-    `<div id="mnuTopRight">${jogosHtml}${conectarHtml}</div>`;
+    `<div id="mnuTopRight">${jogosHtml}${rankHtml}${conectarHtml}</div>`;
   document.body.appendChild(bar);
 
   // --------------------------------------------------------------- drawer

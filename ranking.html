@@ -36,6 +36,8 @@ h1{font-size:1.25rem;font-weight:800;color:var(--gold);letter-spacing:1px;text-t
 .btn{padding:10px 18px;border:1px solid;border-radius:8px;font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:1px;background:transparent;}
 .btn-red{border-color:var(--red);color:var(--red);}
 .rk-del{display:inline-block;background:none;border:none;color:#ff5a7d;cursor:pointer;font-size:1.15rem;padding:0 6px;align-self:center;line-height:1;}
+body.resumo .barra-cfg{display:none;}   /* modo resumo (botão do topo): sem ⚙️ Configuração */
+body.resumo .rk-del{display:none;}       /* modo resumo: sem apagar */
 </style>
 </head>
 <body>
@@ -83,6 +85,8 @@ h1{font-size:1.25rem;font-weight:800;color:var(--gold);letter-spacing:1px;text-t
 const NOMES_PEIXE={pirarara:'Pirarara', tambaqui:'Tambacu', tucunare:'Tucunaré', dourado:'Dourado', trairao:'Pirarara kids', jau:'Jaú', desafio:'Desafio', desafio_tambaqui:'Desafio Tambacu'};
 function nomePeixe(id){ return NOMES_PEIXE[id] || (id?('Sim '+id):'—'); }
 function nomeValido(n){ n=(n||'').trim().toLowerCase(); return n!=='' && n!=='jogador'; }
+const RESUMO=(location.hash==='#resumo'); if(RESUMO) document.body.classList.add('resumo');   // ranking do topo: resumido, só-leitura, filtrado pelo Exibir
+function peixeVisivel(id){ return localStorage.getItem('simpesca2_peixe_'+id)!=='0'; }   // marcado no Exibir (padrão: visível)
 function fmtData(iso){ const d=new Date(iso); return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
 function fmtT(seg){ seg=Math.max(0,Math.round(seg||0)); const m=Math.floor(seg/60), s=seg%60; return m+':'+String(s).padStart(2,'0'); }
 function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -121,7 +125,7 @@ function montarFiltrosFixo(boxId, atual, onSel){
   const box=document.getElementById(boxId); box.innerHTML='';
   const add=(val,txt)=>{ const b=document.createElement('button'); b.className='filtro'+(val===atual?' ativo':''); b.textContent=txt; b.onclick=()=>onSel(val); box.appendChild(b); };
   add('todos','Todas');
-  ESPECIES.forEach(e=>add(e.id, e.nome));
+  ESPECIES.filter(e=>!RESUMO||peixeVisivel(e.id)).forEach(e=>add(e.id, e.nome));   // no resumo, só as espécies marcadas no Exibir
 }
 
 /* ══════════ ENROLA MAIS (por metros) ══════════ */
@@ -143,8 +147,9 @@ function atualizarMediaLinha(){
 function renderEnrola(){
   atualizarMediaLinha();
   const todos=carregarEnrola().filter(r=>nomeValido(r.nome));
-  montarFiltrosFixo('filtrosEnrola', filtroEnrola, selEnrola);   // todas as espécies sempre visíveis
-  let lista = filtroEnrola==='todos' ? todos : todos.filter(r=>r.sim===filtroEnrola);
+  const visiveis = RESUMO ? todos.filter(r=>peixeVisivel(r.sim)) : todos;   // resumo: só peixes marcados no Exibir
+  montarFiltrosFixo('filtrosEnrola', filtroEnrola, selEnrola);
+  let lista = filtroEnrola==='todos' ? visiveis : visiveis.filter(r=>r.sim===filtroEnrola);
   lista.sort((a,b)=>(b.metros||0)-(a.metros||0));
   const el=document.getElementById('listaEnrola');
   if(!lista.length){ el.innerHTML='<div class="vazio">Nenhuma jogada registrada ainda.<br>Jogue "enrola mais linha" para aparecer aqui! 🎣</div>'; return; }
@@ -164,8 +169,9 @@ function carregarDesafio(){ try{ const r=JSON.parse(localStorage.getItem('simpes
 function selDesafio(v){ filtroDesafio=v; renderDesafio(); }
 function renderDesafio(){
   const todos=carregarDesafio();
-  montarFiltros('filtrosDesafio', todos, filtroDesafio, selDesafio);
-  let lista = filtroDesafio==='todos' ? todos.slice() : todos.filter(r=>r.sim===filtroDesafio);
+  const visiveis = RESUMO ? todos.filter(r=>peixeVisivel(r.sim)) : todos;   // resumo: só peixes marcados no Exibir
+  montarFiltros('filtrosDesafio', visiveis, filtroDesafio, selDesafio);
+  let lista = filtroDesafio==='todos' ? visiveis.slice() : visiveis.filter(r=>r.sim===filtroDesafio);
   lista.sort((a,b)=>(b.score||0)-(a.score||0));
   const el=document.getElementById('listaDesafio');
   if(!lista.length){ el.innerHTML='<div class="vazio">Nenhuma jogada registrada ainda.<br>Vença um desafio para aparecer aqui! ⏱</div>'; return; }
