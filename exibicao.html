@@ -35,19 +35,7 @@ input[type=number]{width:70px;background:#0d151d;border:1px solid var(--accent);
     <label class="linha"><input type="checkbox" id="cfgLinha"> Linha enrolada (🎣)</label>
     <label class="linha"><input type="checkbox" id="cfgEstado"> Estado (puxa / recolhe)</label>
     <label class="linha"><input type="checkbox" id="cfgBarra"> Barra de antecipação</label>
-    <label class="linha"><input type="checkbox" id="cfgCarretel"> Linha no carretel / trava (📍)</label>
-    <label class="linha"><input type="checkbox" id="cfgSync"> Ajuste de sincronia (⏱)</label>
     <label class="linha"><input type="checkbox" id="cfgPeso"> Barra de peso (⚖️)</label>
-    <label class="linha"><input type="checkbox" id="cfgTeste"> 🧪 Botões de teste (sem hardware)</label>
-  </div>
-
-  <div class="grupo">
-    <div class="grupo-tit">⚡ Corrente do motor (segurança)</div>
-    <label class="linha"><input type="checkbox" id="cfgCorrente"> Mostrar a corrente na tela do jogo</label>
-    <label class="linha"><input type="checkbox" id="cfgJam"> Pausar automático se a linha travar (corrente alta)</label>
-    <label class="linha">Limite de travamento <input type="number" id="jamLimite" min="0" step="1"> A</label>
-    <label class="linha">sustentada por <input type="number" id="jamMs" min="50" step="50"> ms</label>
-    <div class="dica">Como calibrar: ligue "Mostrar corrente", jogue uma vez normal no Enrola mais e veja a <b>corrente máxima</b> da jogada; depois ponha o limite um pouco acima disso. (Precisa do firmware do ESP mandando a corrente.)</div>
   </div>
 
   <div class="grupo">
@@ -83,19 +71,8 @@ function bindNum(id, chave, getVal){
 bindCheck('cfgLinha','simpesca2_hud_linha',true);
 bindCheck('cfgEstado','simpesca2_hud_estado',true);
 bindCheck('cfgBarra','simpesca2_hud_barra',true);
-bindCheck('cfgCarretel','simpesca2_hud_carretel',true);
-bindCheck('cfgSync','simpesca2_hud_sync',true);
 bindCheck('cfgPeso','simpesca2_hud_peso',true);
-bindCheck('cfgTeste','simpesca2_mostrar_teste',true);
-// prêmios migraram para a página "Configuração de prêmios" (premios.html)
-
-// ⚡ corrente / travamento
-function jamLimiteVal(){ const v=parseFloat(localStorage.getItem('simpesca2_jam_limite')); return isFinite(v)?v:30; }
-function jamMsVal(){ const v=parseFloat(localStorage.getItem('simpesca2_jam_ms')); return isFinite(v)?v:400; }
-bindCheck('cfgCorrente','simpesca2_hud_corrente',false);
-bindCheck('cfgJam','simpesca2_jam_ativo',true);
-bindNum('jamLimite','simpesca2_jam_limite',jamLimiteVal);
-bindNum('jamMs','simpesca2_jam_ms',jamMsVal);
+// prêmios → premios.html · corrente/segurança → seguranca.html · teste/sincronia/carretel → testes.html
 
 // peixes na tela
 (function(){

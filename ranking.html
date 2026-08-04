@@ -152,7 +152,7 @@ function renderEnrola(){
   let lista = filtroEnrola==='todos' ? visiveis : visiveis.filter(r=>r.sim===filtroEnrola);
   lista.sort((a,b)=>(b.metros||0)-(a.metros||0));
   const el=document.getElementById('listaEnrola');
-  if(!lista.length){ el.innerHTML='<div class="vazio">Nenhuma jogada registrada ainda.<br>Jogue "enrola mais linha" para aparecer aqui! 🎣</div>'; return; }
+  if(!lista.length){ el.innerHTML='<div class="vazio">Nenhuma jogada registrada ainda.<br>Jogue "Quem enrola mais" para aparecer aqui! 🎣</div>'; return; }
   el.innerHTML=lista.map((r,i)=>`<div class="linha-rank ${classeTop(i)}">
       <div class="pos">${medalha(i)}</div>
       <div class="info"><div class="nome">${escapeHtml(r.nome)}</div><div class="meta">🐟 ${nomePeixe(r.sim)} · ${fmtData(r.data)}</div></div>
@@ -174,7 +174,7 @@ function renderDesafio(){
   let lista = filtroDesafio==='todos' ? visiveis.slice() : visiveis.filter(r=>r.sim===filtroDesafio);
   lista.sort((a,b)=>(b.score||0)-(a.score||0));
   const el=document.getElementById('listaDesafio');
-  if(!lista.length){ el.innerHTML='<div class="vazio">Nenhuma jogada registrada ainda.<br>Vença um desafio para aparecer aqui! ⏱</div>'; return; }
+  if(!lista.length){ el.innerHTML='<div class="vazio">Nenhuma jogada registrada ainda.<br>Jogue "Quem tira o peixe mais rápido" para aparecer aqui! ⏱</div>'; return; }
   el.innerHTML=lista.slice(0,100).map((r,i)=>`<div class="linha-rank ${classeTop(i)}">
       <div class="pos">${medalha(i)}</div>
       <div class="info"><div class="nome">${escapeHtml(r.nome)}</div><div class="meta">🐟 ${nomePeixe(r.sim)} · ⚖️ ${(r.peso||0).toFixed(0)} kg · ⏱ ${fmtT(r.tempo)}</div></div>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SimPesca — Segurança</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#050a0f">
+<style>
+:root{--bg:#050a0f;--card:#0d151d;--border:#1a2736;--accent:#00d4ff;--green:#00e676;--text:#e0e6ed;--dim:#7b8d9e;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.wrap{max-width:640px;margin:0 auto;padding:22px 16px;}
+h1{font-size:1.25rem;color:var(--accent);font-weight:800;letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:9px;}
+.sub{color:var(--dim);font-size:0.82rem;margin-bottom:18px;line-height:1.5;}
+.grupo{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px;}
+.grupo-tit{font-size:0.66rem;letter-spacing:1.5px;color:#7e96ad;text-transform:uppercase;margin-bottom:10px;}
+label.linha{display:flex;align-items:center;gap:10px;padding:8px 0;cursor:pointer;font-size:0.95rem;border-bottom:1px solid rgba(255,255,255,0.03);}
+label.linha:last-child{border-bottom:none;}
+input[type=checkbox]{accent-color:var(--accent);cursor:pointer;width:19px;height:19px;flex-shrink:0;}
+input[type=number]{width:70px;background:#0d151d;border:1px solid var(--accent);border-radius:6px;color:var(--text);font-family:monospace;font-size:0.95rem;padding:5px 6px;text-align:center;outline:none;}
+.dica{font-size:0.72rem;color:var(--dim);margin-top:8px;line-height:1.5;}
+</style>
+</head>
+<body>
+<script>window.MENU_ATUAL='seguranca';</script>
+<script src="menu.js"></script>
+<div class="wrap">
+  <h1><span>🛡️</span> Segurança</h1>
+  <div class="sub">Proteção contra linha travada (corrente alta). Salva no aparelho.</div>
+
+  <div class="grupo">
+    <div class="grupo-tit">⚡ Corrente do motor</div>
+    <label class="linha"><input type="checkbox" id="cfgCorrente"> Mostrar a corrente na tela do jogo</label>
+    <label class="linha"><input type="checkbox" id="cfgJam"> Pausar automático se a linha travar (corrente alta)</label>
+    <label class="linha">Limite de travamento <input type="number" id="jamLimite" min="0" step="1"> A</label>
+    <label class="linha">sustentada por <input type="number" id="jamMs" min="50" step="50"> ms</label>
+    <div class="dica">Como calibrar: ligue "Mostrar corrente", jogue uma vez normal no "Quem enrola mais" e veja a <b>corrente máxima</b> da jogada; depois ponha o limite um pouco acima disso. (Precisa do firmware do ESP mandando a corrente.)</div>
+  </div>
+</div>
+
+<script>
+const g=(k,d)=>{ const v=localStorage.getItem(k); return v===null?d:v==='1'; };
+function bindCheck(id, chave, padrao){ const el=document.getElementById(id); if(!el) return; el.checked=g(chave, padrao); el.addEventListener('change',()=>{ localStorage.setItem(chave, el.checked?'1':'0'); }); }
+function bindNum(id, chave, getVal){ const el=document.getElementById(id); if(!el) return; el.value=getVal(); el.addEventListener('change',()=>{ const v=parseFloat(el.value); if(isFinite(v)&&v>=0) localStorage.setItem(chave, v); else el.value=getVal(); }); }
+function jamLimiteVal(){ const v=parseFloat(localStorage.getItem('simpesca2_jam_limite')); return isFinite(v)?v:30; }
+function jamMsVal(){ const v=parseFloat(localStorage.getItem('simpesca2_jam_ms')); return isFinite(v)?v:400; }
+bindCheck('cfgCorrente','simpesca2_hud_corrente',false);
+bindCheck('cfgJam','simpesca2_jam_ativo',true);
+bindNum('jamLimite','simpesca2_jam_limite',jamLimiteVal);
+bindNum('jamMs','simpesca2_jam_ms',jamMsVal);
+</script>
+</body>
+</html>

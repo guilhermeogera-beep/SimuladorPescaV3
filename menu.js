@@ -14,6 +14,9 @@
   const LINKS=[
     {ic:'⚙️', nome:'Configuração de exibição', pg:'exibicao.html',        id:'exibicao'},
     {ic:'🎁', nome:'Configuração de prêmios',   pg:'premios.html',         id:'premios'},
+    {ic:'🛡️', nome:'Segurança',                 pg:'seguranca.html',       id:'seguranca'},
+    {ic:'🧪', nome:'Testes / ajustes',          pg:'testes.html',          id:'testes'},
+    {ic:'🧵', nome:'Troca de linha (config.)',  pg:'troca-linha-config.html', id:'troca-config'},
     {ic:'📏', nome:'Calibração do encoder',     pg:'motor.html#calibracao', id:'calibracao'},
     {ic:'🎚️', nome:'Controle manual',           pg:'motor.html#controle',   id:'controle'},
     {ic:'🔧', nome:'Configuração do motor',     pg:'motor.html#motor',      id:'motor'},
@@ -85,13 +88,14 @@
   }).join('');
   const conectarHtml = temBLE ? `<button id="mnuConectar" onclick="(window.conectarBLE&&window.conectarBLE())">🔌 Conectar</button>` : '';
   const rankHtml = `<button class="mnu-jogo" onclick="location.href='ranking.html#resumo'" title="Ranking (resumo)"><span>🏆</span><span class="mnu-jogo-txt">Ranking</span></button>`;   // ranking rápido/resumido no topo
+  const trocaHtml = `<button class="mnu-jogo" onclick="location.href='troca-linha.html'" title="Troca de linha"><span>🧵</span><span class="mnu-jogo-txt">Troca de linha</span></button>`;
   const tituloAtual = (LINKS.concat(JOGOS.map(j=>({id:j.id,nome:j.nome}))).find(x=>x.id===atual)||{}).nome || 'SimPesca';
 
   const bar=document.createElement('div'); bar.id='mnuTopbar';
   bar.innerHTML =
     `<button id="mnuHamb" aria-label="Menu" title="Menu"><span></span><span></span><span></span></button>`+
     `<span id="mnuTitulo">${tituloAtual}</span>`+
-    `<div id="mnuTopRight">${jogosHtml}${rankHtml}${conectarHtml}</div>`;
+    `<div id="mnuTopRight">${jogosHtml}${rankHtml}${trocaHtml}${conectarHtml}</div>`;
   document.body.appendChild(bar);
 
   // --------------------------------------------------------------- drawer
