@@ -502,7 +502,7 @@ function mostrarSecao(){
   const sec=(location.hash||'').replace('#','')||'controle';
   document.querySelectorAll('.card[data-sec]').forEach(c=>{
     const on=(c.getAttribute('data-sec')===sec);
-    c.style.display = on ? '' : 'none';
+    c.style.display = on ? 'block' : 'none';        // 'block' explícito p/ vencer o CSS .card[data-sec]{display:none}
     if(on) c.classList.remove('card-colapsado');   // seção ativa sempre expandida
   });
 }
