@@ -131,7 +131,7 @@ select{background:var(--surface);border:1px solid var(--border);color:var(--text
 </style>
 </head>
 <body>
-<script>window.MENU_ATUAL='motor'; window.PAGINA_TEM_BLE=true;</script>
+<script>window.MENU_ATUAL=(location.hash||'').replace('#','')||'controle'; window.PAGINA_TEM_BLE=true;</script>
 <script src="menu.js"></script>
 
 <div class="rotacionar-dica">📱 <span>Tela apertada pra editar? Force a <b>paisagem</b> + tela cheia:</span><br><button type="button" onclick="forcarPaisagem()">🔄 Forçar paisagem</button></div>
@@ -505,6 +505,7 @@ function mostrarSecao(){
     c.style.display = on ? 'block' : 'none';        // 'block' explícito p/ vencer o CSS .card[data-sec]{display:none}
     if(on) c.classList.remove('card-colapsado');   // seção ativa sempre expandida
   });
+  if(window.menuSetAtivo) window.menuSetAtivo(sec);   // destaca o item certo do menu + corrige o título
 }
 window.addEventListener('hashchange', mostrarSecao);
 mostrarSecao();   // mostra a seção certa já no carregamento (independe do init)

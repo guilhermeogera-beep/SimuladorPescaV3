@@ -13,10 +13,10 @@
   // --- itens do menu lateral (drawer) ---
   const LINKS=[
     {ic:'⚙️', nome:'Configuração de exibição', pg:'exibicao.html',        id:'exibicao'},
-    {ic:'📏', nome:'Calibração do encoder',     pg:'motor.html#calibracao', id:'motor'},
-    {ic:'🎚️', nome:'Controle manual',           pg:'motor.html#controle',   id:'motor'},
+    {ic:'📏', nome:'Calibração do encoder',     pg:'motor.html#calibracao', id:'calibracao'},
+    {ic:'🎚️', nome:'Controle manual',           pg:'motor.html#controle',   id:'controle'},
     {ic:'🔧', nome:'Configuração do motor',     pg:'motor.html#motor',      id:'motor'},
-    {ic:'🎬', nome:'Gerador de simulações curtas', pg:'motor.html#gerador', id:'motor'},
+    {ic:'🎬', nome:'Gerador de simulações curtas', pg:'motor.html#gerador', id:'gerador'},
     {ic:'🐟', nome:'Gerador de simulação desafio', pg:'desafio.html', id:'desafio'},
     {ic:'🏆', nome:'Ranking',                    pg:'ranking.html',         id:'ranking'},
     {ic:'🔗', nome:'Conexão GitHub',             pg:'github.html',          id:'github'},
@@ -95,11 +95,11 @@
   const drw=document.createElement('div'); drw.id='mnuDrawer';
   const linksHtml = LINKS.map(l=>{
     const cl = l.id===atual ? 'mnu-link ativo' : 'mnu-link';
-    return `<a class="${cl}" href="${l.pg}"><span class="mnu-ic">${l.ic}</span><span>${l.nome}</span></a>`;
+    return `<a class="${cl}" data-id="${l.id}" href="${l.pg}"><span class="mnu-ic">${l.ic}</span><span>${l.nome}</span></a>`;
   }).join('');
   const jogosDrawer = JOGOS.map(j=>{
     const cl = j.id===atual ? 'mnu-link ativo' : 'mnu-link';
-    return `<a class="${cl}" href="${j.pg}"><span class="mnu-ic">${j.ic}</span><span>${j.nome}</span></a>`;
+    return `<a class="${cl}" data-id="${j.id}" href="${j.pg}"><span class="mnu-ic">${j.ic}</span><span>${j.nome}</span></a>`;
   }).join('');
   drw.innerHTML =
     `<div id="mnuDrawerHead"><b>SIMPESCA</b><button id="mnuFechar" aria-label="Fechar">✕</button></div>`+
@@ -125,5 +125,10 @@
   window.menuConexaoOcupado=function(txt){
     const b=document.getElementById('mnuConectar'); if(!b) return;
     b.classList.add('ocupado'); b.textContent = txt || '⏳ Conectando...';
+  };
+  // atualiza o item destacado + o título quando a página troca de seção (ex.: motor.html trocando de #hash sem recarregar)
+  window.menuSetAtivo=function(id){
+    document.querySelectorAll('#mnuDrawer [data-id]').forEach(a=>a.classList.toggle('ativo', a.getAttribute('data-id')===id));
+    const t=document.getElementById('mnuTitulo'); const it=LINKS.concat(JOGOS).find(x=>x.id===id); if(t&&it) t.textContent=it.nome;
   };
 })();
