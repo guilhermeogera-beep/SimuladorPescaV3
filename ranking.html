@@ -2,23 +2,178 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SimPesca — Ranking</title>
+<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#050a0f">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{background:#050a0f;color:#e0e6ed;font-family:'Segoe UI',sans-serif;min-height:100vh;}
-.wrap{max-width:760px;margin:0 auto;padding:24px 18px;}
-h1{font-size:1.3rem;color:#00d4ff;font-weight:800;letter-spacing:1px;margin-bottom:12px;}
-.emconstru{background:#0d151d;border:1px solid #1a2736;border-radius:12px;padding:20px;color:#7b8d9e;line-height:1.8;}
+:root{--bg:#050a0f;--card:#0d151d;--surface:#121d28;--border:#1a2736;--accent:#00d4ff;--green:#00e676;--gold:#ffd700;--silver:#c0c8d0;--bronze:#cd7f32;--red:#ff1744;--text:#e0e6ed;--dim:#7b8d9e;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh;padding:18px;max-width:720px;margin:0 auto;}
+h1{font-size:1.25rem;font-weight:800;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.tabs{display:flex;gap:8px;margin-bottom:16px;}
+.tab{flex:1;padding:12px 10px;border:1px solid var(--border);border-radius:10px;background:rgba(20,40,64,0.35);color:var(--dim);cursor:pointer;font-size:0.9rem;font-weight:700;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;}
+.tab.ativo{border-color:var(--accent);color:#fff;background:rgba(0,212,255,0.16);}
+.barra-cfg{display:flex;justify-content:flex-end;margin-bottom:10px;}
+.btn-link{font-size:0.7rem;padding:8px 14px;border:1px solid var(--dim);border-radius:8px;color:var(--dim);cursor:pointer;background:transparent;font-family:inherit;letter-spacing:1px;}
+.cfgPanel{display:none;margin-bottom:16px;padding:16px;background:var(--card);border:1px solid var(--border);border-radius:12px;}
+.filtros{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.filtro{padding:8px 16px;border:1px solid #3d5d7e;border-radius:20px;background:rgba(20,40,64,0.45);color:#b9d2e6;cursor:pointer;font-size:0.85rem;font-family:inherit;}
+.filtro.ativo{border-color:var(--accent);color:#fff;background:rgba(0,212,255,0.18);font-weight:700;}
+.lista{display:flex;flex-direction:column;gap:8px;}
+.linha-rank{display:flex;align-items:center;gap:14px;background:#0c1722;border:1px solid #1c344e;border-radius:12px;padding:14px 16px;}
+.pos{font-size:1.35rem;font-weight:800;min-width:44px;text-align:center;color:#9fb6cc;}
+.linha-rank.top1{border-color:var(--gold);box-shadow:0 0 18px rgba(255,215,0,0.15);} .top1 .pos{color:var(--gold);}
+.linha-rank.top2{border-color:var(--silver);} .top2 .pos{color:#dde4ea;}
+.linha-rank.top3{border-color:var(--bronze);} .top3 .pos{color:#e89c50;}
+.info{flex:1;min-width:0;}
+.nome{font-size:1.1rem;font-weight:700;color:#eef6ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.meta{font-size:0.78rem;color:#8fb0cc;margin-top:2px;}
+.valor{font-size:1.3rem;font-weight:800;color:var(--green);font-family:monospace;white-space:nowrap;text-shadow:0 0 10px rgba(0,230,118,0.3);}
+.valor.pts{color:var(--gold);text-shadow:0 0 10px rgba(255,215,0,0.3);}
+.vazio{text-align:center;color:#9fb6cc;padding:40px 20px;font-size:0.95rem;}
+.acoes{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;}
+.btn{padding:10px 18px;border:1px solid;border-radius:8px;font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:1px;background:transparent;}
+.btn-red{border-color:var(--red);color:var(--red);}
+.rk-del{display:none;background:none;border:none;color:#ff5a7d;cursor:pointer;font-size:1.15rem;padding:0 6px;align-self:center;line-height:1;}
+body.editando .rk-del{display:inline-block;}
 </style>
 </head>
 <body>
 <script>window.MENU_ATUAL='ranking';</script>
 <script src="menu.js"></script>
-<div class="wrap">
-  <h1>🏆 Ranking</h1>
-  <div class="emconstru">🚧 Em construção.<br>Virá o ranking.</div>
+
+<h1><span>🏆</span> Ranking</h1>
+
+<div class="tabs">
+  <button class="tab ativo" id="tabEnrola" onclick="trocarAba('enrola')">🎣 Enrola mais linha</button>
+  <button class="tab" id="tabDesafio" onclick="trocarAba('desafio')">⏱ Desafio</button>
 </div>
+
+<!-- ══════════ ABA ENROLA MAIS ══════════ -->
+<div id="secEnrola">
+  <div class="barra-cfg"><button class="btn-link" onclick="toggleCfg('enrola')">⚙️ Configuração</button></div>
+  <div class="cfgPanel" id="cfgEnrola">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span style="font-size:0.85rem;color:var(--text);white-space:nowrap;">📏 Média de linha puxada (todas as jogadas):</span>
+      <span id="cfgMediaLinha" style="font-family:monospace;font-size:1.05rem;color:var(--green);font-weight:800;">—</span>
+    </div>
+    <div class="acoes" style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px;">
+      <button class="btn btn-red" onclick="limparEnrola()">🗑 Limpar ranking</button>
+    </div>
+  </div>
+  <div class="filtros" id="filtrosEnrola"></div>
+  <div class="lista" id="listaEnrola"></div>
+</div>
+
+<!-- ══════════ ABA DESAFIO ══════════ -->
+<div id="secDesafio" style="display:none">
+  <div class="barra-cfg"><button class="btn-link" onclick="toggleCfg('desafio')">⚙️ Configuração</button></div>
+  <div class="cfgPanel" id="cfgDesafio">
+    <div style="font-size:0.8rem;color:var(--dim);line-height:1.6;">Ranqueado pela <b style="color:var(--gold)">pontuação</b> (peso + bônus por pegar rápido). Abra a configuração e use o 🗑 pra apagar um resultado.</div>
+    <div class="acoes" style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">
+      <button class="btn btn-red" onclick="limparDesafio()">🗑 Limpar ranking</button>
+    </div>
+  </div>
+  <div class="filtros" id="filtrosDesafio"></div>
+  <div class="lista" id="listaDesafio"></div>
+</div>
+
+<script>
+// ── nomes dos peixes (best-effort; letras do desafio caem no fallback até o v3 do desafio) ──
+const NOMES_PEIXE={pirarara:'Pirarara', tambaqui:'Tambacu', tucunare:'Tucunaré', dourado:'Dourado', trairao:'Pirarara kids', jau:'Jaú', desafio:'Desafio', desafio_tambaqui:'Desafio Tambacu'};
+function nomePeixe(id){ return NOMES_PEIXE[id] || (id?('Sim '+id):'—'); }
+function nomeValido(n){ n=(n||'').trim().toLowerCase(); return n!=='' && n!=='jogador'; }
+function fmtData(iso){ const d=new Date(iso); return d.toLocaleDateString('pt-BR')+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+function fmtT(seg){ seg=Math.max(0,Math.round(seg||0)); const m=Math.floor(seg/60), s=seg%60; return m+':'+String(s).padStart(2,'0'); }
+function escapeHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function medalha(i){ return i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'º'; }
+function classeTop(i){ return i===0?'top1':i===1?'top2':i===2?'top3':''; }
+
+// ── abas ──
+function trocarAba(qual){
+  const e=qual==='enrola';
+  document.getElementById('secEnrola').style.display = e?'':'none';
+  document.getElementById('secDesafio').style.display = e?'none':'';
+  document.getElementById('tabEnrola').classList.toggle('ativo', e);
+  document.getElementById('tabDesafio').classList.toggle('ativo', !e);
+  document.getElementById('cfgEnrola').style.display='none';
+  document.getElementById('cfgDesafio').style.display='none';
+  document.body.classList.remove('editando');
+}
+function toggleCfg(qual){
+  const p=document.getElementById(qual==='enrola'?'cfgEnrola':'cfgDesafio');
+  const abrir=(p.style.display==='none'||!p.style.display);
+  p.style.display=abrir?'block':'none';
+  document.body.classList.toggle('editando', abrir);   // mostra os 🗑 de cada linha
+}
+
+// ── monta filtros por peixe a partir dos dados presentes ──
+function montarFiltros(boxId, dados, atual, onSel){
+  const box=document.getElementById(boxId); box.innerHTML='';
+  const add=(val,txt)=>{ const b=document.createElement('button'); b.className='filtro'+(val===atual?' ativo':''); b.textContent=txt; b.onclick=()=>onSel(val); box.appendChild(b); };
+  add('todos','Todas');
+  const vistos=[]; dados.forEach(r=>{ if(r.sim!=null && vistos.indexOf(r.sim)<0) vistos.push(r.sim); });
+  vistos.forEach(s=>add(s, nomePeixe(s)));
+}
+
+/* ══════════ ENROLA MAIS (por metros) ══════════ */
+let filtroEnrola='todos';
+function carregarEnrola(){ try{ return JSON.parse(localStorage.getItem('simpesca2_ranking'))||[]; }catch(e){ return []; } }
+function selEnrola(v){ filtroEnrola=v; renderEnrola(); }
+function atualizarMediaLinha(){
+  const el=document.getElementById('cfgMediaLinha'); if(!el) return;
+  const val=carregarEnrola().filter(r=>nomeValido(r.nome));
+  if(!val.length){ el.textContent='— (sem jogadas)'; return; }
+  const media=val.reduce((s,r)=>s+(r.metros||0),0)/val.length;
+  const abaixo=val.filter(r=>(r.metros||0)<media).length, acima=val.length-abaixo;
+  const ord=val.map(r=>r.metros||0).sort((a,b)=>a-b), n=ord.length;
+  const mediana=(n%2)?ord[(n-1)/2]:(ord[n/2-1]+ord[n/2])/2;
+  const perc=q=>{ const r=(n-1)*q, lo=Math.floor(r), f=r-lo; return lo+1<n?ord[lo]+f*(ord[lo+1]-ord[lo]):ord[lo]; };
+  const pStr=[70,75,80,90].map(P=>{ const v=perc(P/100), q=val.filter(r=>(r.metros||0)>=v).length; return 'P'+P+' (top '+(100-P)+'%) '+v.toFixed(1)+' m ('+q+' passa'+(q===1?'':'m')+')'; }).join(' · ');
+  el.textContent=media.toFixed(1)+' m · '+val.length+' jogada'+(val.length>1?'s':'')+'  (↑ '+acima+' na média ou acima · ↓ '+abaixo+' abaixo) · mediana '+mediana.toFixed(1)+' m · '+pStr;
+}
+function renderEnrola(){
+  atualizarMediaLinha();
+  const todos=carregarEnrola().filter(r=>nomeValido(r.nome));
+  montarFiltros('filtrosEnrola', todos, filtroEnrola, selEnrola);
+  let lista = filtroEnrola==='todos' ? todos : todos.filter(r=>r.sim===filtroEnrola);
+  lista.sort((a,b)=>(b.metros||0)-(a.metros||0));
+  const el=document.getElementById('listaEnrola');
+  if(!lista.length){ el.innerHTML='<div class="vazio">Nenhuma jogada registrada ainda.<br>Jogue "enrola mais linha" para aparecer aqui! 🎣</div>'; return; }
+  el.innerHTML=lista.map((r,i)=>`<div class="linha-rank ${classeTop(i)}">
+      <div class="pos">${medalha(i)}</div>
+      <div class="info"><div class="nome">${escapeHtml(r.nome)}</div><div class="meta">🐟 ${nomePeixe(r.sim)} · ${fmtData(r.data)}</div></div>
+      <div class="valor">${(r.metros||0).toFixed(1)} m</div>
+      <button class="rk-del" onclick="deletarEnrola('${r.data}')" title="Apagar este resultado" aria-label="apagar">🗑</button>
+    </div>`).join('');
+}
+function deletarEnrola(data){ if(!confirm('Apagar este resultado?')) return; let a=carregarEnrola(); const i=a.findIndex(r=>String(r.data)===String(data)); if(i>=0){ a.splice(i,1); localStorage.setItem('simpesca2_ranking', JSON.stringify(a)); renderEnrola(); } }
+function limparEnrola(){ if(confirm('Apagar TODO o ranking de "Enrola mais linha"? Não dá para desfazer.')){ localStorage.removeItem('simpesca2_ranking'); renderEnrola(); } }
+
+/* ══════════ DESAFIO (por pontuação) ══════════ */
+let filtroDesafio='todos';
+function carregarDesafio(){ try{ const r=JSON.parse(localStorage.getItem('simpesca2_aleat_ranking')||'[]'); return Array.isArray(r)?r:[]; }catch(e){ return []; } }
+function selDesafio(v){ filtroDesafio=v; renderDesafio(); }
+function renderDesafio(){
+  const todos=carregarDesafio();
+  montarFiltros('filtrosDesafio', todos, filtroDesafio, selDesafio);
+  let lista = filtroDesafio==='todos' ? todos.slice() : todos.filter(r=>r.sim===filtroDesafio);
+  lista.sort((a,b)=>(b.score||0)-(a.score||0));
+  const el=document.getElementById('listaDesafio');
+  if(!lista.length){ el.innerHTML='<div class="vazio">Nenhuma jogada registrada ainda.<br>Vença um desafio para aparecer aqui! ⏱</div>'; return; }
+  el.innerHTML=lista.slice(0,100).map((r,i)=>`<div class="linha-rank ${classeTop(i)}">
+      <div class="pos">${medalha(i)}</div>
+      <div class="info"><div class="nome">${escapeHtml(r.nome)}</div><div class="meta">🐟 ${nomePeixe(r.sim)} · ⚖️ ${(r.peso||0).toFixed(0)} kg · ⏱ ${fmtT(r.tempo)}</div></div>
+      <div class="valor pts">${(r.score||0)} pts</div>
+      <button class="rk-del" onclick="deletarDesafio('${r.data}')" title="Apagar este resultado" aria-label="apagar">🗑</button>
+    </div>`).join('');
+}
+function deletarDesafio(data){ if(!confirm('Apagar este resultado?')) return; let a=carregarDesafio(); const i=a.findIndex(r=>String(r.data)===String(data)); if(i>=0){ a.splice(i,1); localStorage.setItem('simpesca2_aleat_ranking', JSON.stringify(a)); renderDesafio(); } }
+function limparDesafio(){ if(confirm('Apagar TODO o ranking do "Desafio"? Não dá para desfazer.')){ localStorage.removeItem('simpesca2_aleat_ranking'); renderDesafio(); } }
+
+renderEnrola();
+renderDesafio();
+</script>
 </body>
 </html>
