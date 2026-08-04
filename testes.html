@@ -24,6 +24,7 @@ input[type=checkbox]{accent-color:var(--accent);cursor:pointer;width:19px;height
 <body>
 <script>window.MENU_ATUAL='testes';</script>
 <script src="menu.js"></script>
+<script src="prefs.js"></script>
 <div class="wrap">
   <h1><span>🧪</span> Testes / ajustes</h1>
   <div class="sub">Recursos de teste e ajuste que aparecem na tela do jogo. Salva no aparelho.</div>
@@ -45,7 +46,7 @@ input[type=checkbox]{accent-color:var(--accent);cursor:pointer;width:19px;height
 
 <script>
 const g=(k,d)=>{ const v=localStorage.getItem(k); return v===null?d:v==='1'; };
-function bindCheck(id, chave, padrao){ const el=document.getElementById(id); if(!el) return; el.checked=g(chave, padrao); el.addEventListener('change',()=>{ localStorage.setItem(chave, el.checked?'1':'0'); }); }
+function bindCheck(id, chave, padrao){ const el=document.getElementById(id); if(!el) return; el.checked=g(chave, padrao); el.addEventListener('change',()=>{ localStorage.setItem(chave, el.checked?'1':'0'); if(window.syncPrefs) window.syncPrefs(); }); }
 bindCheck('cfgTeste','simpesca2_mostrar_teste',true);
 bindCheck('cfgSync','simpesca2_hud_sync',true);
 bindCheck('cfgCarretel','simpesca2_hud_carretel',true);

@@ -24,6 +24,7 @@ input[type=number]{width:80px;background:#0d151d;border:1px solid var(--accent);
 <body>
 <script>window.MENU_ATUAL='troca-config';</script>
 <script src="menu.js"></script>
+<script src="prefs.js"></script>
 <div class="wrap">
   <h1><span>🧵</span> Troca de linha — configuração</h1>
   <div class="sub">Ajustes da troca de linha. Salva no aparelho.</div>
@@ -54,16 +55,16 @@ function rampaVal(){ const v=parseFloat(localStorage.getItem('simpesca2_troca_ra
 (function(){
   const cm=document.getElementById('cfgMostrar');
   cm.checked = localStorage.getItem('simpesca2_troca_mostrar')!=='0';   // padrão: mostrar
-  cm.addEventListener('change',()=>{ localStorage.setItem('simpesca2_troca_mostrar', cm.checked?'1':'0'); });
+  cm.addEventListener('change',()=>{ localStorage.setItem('simpesca2_troca_mostrar', cm.checked?'1':'0'); if(window.syncPrefs) window.syncPrefs(); });
   const el=document.getElementById('cfgMetros');
   el.value=metrosVal();
-  el.addEventListener('change',()=>{ const v=parseFloat(el.value); if(isFinite(v)&&v!==0) localStorage.setItem('simpesca2_troca_metros', v); else el.value=metrosVal(); });
+  el.addEventListener('change',()=>{ const v=parseFloat(el.value); if(isFinite(v)&&v!==0){ localStorage.setItem('simpesca2_troca_metros', v); if(window.syncPrefs) window.syncPrefs(); } else el.value=metrosVal(); });
   const vel=document.getElementById('cfgVel');
   vel.value=velVal();
-  vel.addEventListener('change',()=>{ let v=parseFloat(vel.value); if(isFinite(v)&&v>0){ v=Math.min(100,v); localStorage.setItem('simpesca2_troca_velocidade', v); vel.value=v; } else vel.value=velVal(); });
+  vel.addEventListener('change',()=>{ let v=parseFloat(vel.value); if(isFinite(v)&&v>0){ v=Math.min(100,v); localStorage.setItem('simpesca2_troca_velocidade', v); vel.value=v; if(window.syncPrefs) window.syncPrefs(); } else vel.value=velVal(); });
   const ra=document.getElementById('cfgRampa');
   ra.value=rampaVal();
-  ra.addEventListener('change',()=>{ const v=parseFloat(ra.value); if(isFinite(v)&&v>=0) localStorage.setItem('simpesca2_troca_rampa', v); else ra.value=rampaVal(); });
+  ra.addEventListener('change',()=>{ const v=parseFloat(ra.value); if(isFinite(v)&&v>=0){ localStorage.setItem('simpesca2_troca_rampa', v); if(window.syncPrefs) window.syncPrefs(); } else ra.value=rampaVal(); });
 })();
 </script>
 </body>

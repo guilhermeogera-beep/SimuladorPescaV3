@@ -28,6 +28,7 @@ input[type=number]{width:70px;background:#0d151d;border:1px solid var(--accent);
 <body>
 <script>window.MENU_ATUAL='premios';</script>
 <script src="menu.js"></script>
+<script src="prefs.js"></script>
 <div class="wrap">
   <h1><span>🎁</span> Configuração de prêmios</h1>
   <div class="sub">Prêmios que aparecem no fim de cada jogo. Salva no aparelho.</div>
@@ -55,12 +56,12 @@ function premioBoiaMinVal(){ const v=parseFloat(localStorage.getItem('simpesca2_
 function bindCheck(id, chave, padrao){
   const el=document.getElementById(id); if(!el) return;
   el.checked=g(chave, padrao);
-  el.addEventListener('change',()=>{ localStorage.setItem(chave, el.checked?'1':'0'); });
+  el.addEventListener('change',()=>{ localStorage.setItem(chave, el.checked?'1':'0'); if(window.syncPrefs) window.syncPrefs(); });
 }
 function bindNum(id, chave, getVal){
   const el=document.getElementById(id); if(!el) return;
   el.value=getVal();
-  el.addEventListener('change',()=>{ const v=parseFloat(el.value); if(isFinite(v)&&v>=0) localStorage.setItem(chave, v); else el.value=getVal(); });
+  el.addEventListener('change',()=>{ const v=parseFloat(el.value); if(isFinite(v)&&v>=0){ localStorage.setItem(chave, v); if(window.syncPrefs) window.syncPrefs(); } else el.value=getVal(); });
 }
 bindCheck('cfgPremioBone','simpesca2_hud_premio_bone',true);
 bindCheck('cfgPremioBoia','simpesca2_hud_premio_boia',true);

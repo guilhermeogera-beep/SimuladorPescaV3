@@ -26,6 +26,7 @@ input[type=number]{width:70px;background:#0d151d;border:1px solid var(--accent);
 <body>
 <script>window.MENU_ATUAL='exibicao';</script>
 <script src="menu.js"></script>
+<script src="prefs.js"></script>
 <div class="wrap">
   <h1><span>⚙️</span> Configuração de exibição</h1>
   <div class="sub">Escolhe o que aparece na tela durante o jogo "Enrola mais linha". Salva no aparelho.</div>
@@ -60,12 +61,12 @@ const g=(k,d)=>{ const v=localStorage.getItem(k); return v===null?d:v==='1'; };
 function bindCheck(id, chave, padrao){
   const el=document.getElementById(id); if(!el) return;
   el.checked=g(chave, padrao);
-  el.addEventListener('change',()=>{ localStorage.setItem(chave, el.checked?'1':'0'); });
+  el.addEventListener('change',()=>{ localStorage.setItem(chave, el.checked?'1':'0'); if(window.syncPrefs) window.syncPrefs(); });
 }
 function bindNum(id, chave, getVal){
   const el=document.getElementById(id); if(!el) return;
   el.value=getVal();
-  el.addEventListener('change',()=>{ const v=parseFloat(el.value); if(isFinite(v)&&v>=0) localStorage.setItem(chave, v); else el.value=getVal(); });
+  el.addEventListener('change',()=>{ const v=parseFloat(el.value); if(isFinite(v)&&v>=0){ localStorage.setItem(chave, v); if(window.syncPrefs) window.syncPrefs(); } else el.value=getVal(); });
 }
 
 bindCheck('cfgLinha','simpesca2_hud_linha',true);
@@ -80,7 +81,7 @@ bindCheck('cfgPeso','simpesca2_hud_peso',true);
   ESPECIES.forEach(e=>{
     const lab=document.createElement('label'); lab.className='linha';
     const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=localStorage.getItem('simpesca2_peixe_'+e.id)!=='0';
-    cb.addEventListener('change',()=>{ localStorage.setItem('simpesca2_peixe_'+e.id, cb.checked?'1':'0'); });
+    cb.addEventListener('change',()=>{ localStorage.setItem('simpesca2_peixe_'+e.id, cb.checked?'1':'0'); if(window.syncPrefs) window.syncPrefs(); });
     lab.appendChild(cb); lab.appendChild(document.createTextNode(' '+e.nome));
     box.appendChild(lab);
   });
