@@ -7,20 +7,64 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#050a0f">
 <style>
-:root{--bg:#050a0f;--card:#0d151d;--border:#1a2736;--accent:#00d4ff;--text:#e0e6ed;--dim:#7b8d9e;}
+:root{--bg:#050a0f;--card:#0d151d;--border:#1a2736;--accent:#00d4ff;--green:#00e676;--text:#e0e6ed;--dim:#7b8d9e;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh;}
-.wrap{max-width:640px;margin:0 auto;padding:24px 16px;}
-h1{font-size:1.3rem;color:var(--accent);font-weight:800;letter-spacing:1px;margin-bottom:12px;display:flex;align-items:center;gap:9px;}
-.emconstru{background:#0d151d;border:1px solid #1a2736;border-radius:12px;padding:20px;color:var(--dim);line-height:1.8;}
+.wrap{max-width:640px;margin:0 auto;padding:22px 16px;}
+h1{font-size:1.25rem;color:var(--accent);font-weight:800;letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:9px;}
+.sub{color:var(--dim);font-size:0.82rem;margin-bottom:18px;line-height:1.5;}
+.grupo{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px;}
+.grupo-tit{font-size:0.66rem;letter-spacing:1.5px;color:#7e96ad;text-transform:uppercase;margin-bottom:10px;}
+label.linha{display:flex;align-items:center;gap:10px;padding:8px 0;cursor:pointer;font-size:0.95rem;}
+input[type=checkbox]{accent-color:var(--accent);cursor:pointer;width:19px;height:19px;flex-shrink:0;}
+input[type=number]{width:80px;background:#0d151d;border:1px solid var(--accent);border-radius:6px;color:var(--text);font-family:monospace;font-size:0.95rem;padding:6px 8px;text-align:center;outline:none;}
+.dica{font-size:0.72rem;color:var(--dim);margin-top:8px;line-height:1.5;}
 </style>
 </head>
 <body>
-<script>window.MENU_ATUAL='troca-config'; window.PAGINA_TEM_BLE=true;</script>
+<script>window.MENU_ATUAL='troca-config';</script>
 <script src="menu.js"></script>
 <div class="wrap">
   <h1><span>🧵</span> Troca de linha — configuração</h1>
-  <div class="emconstru">🚧 Em construção.<br>Aqui vão os ajustes da troca de linha. A gente define o que entra depois.</div>
+  <div class="sub">Ajustes da troca de linha. Salva no aparelho.</div>
+
+  <div class="grupo">
+    <div class="grupo-tit">Botão no topo</div>
+    <label class="linha"><input type="checkbox" id="cfgMostrar"> Exibir o botão "Troca de linha" no cabeçalho</label>
+  </div>
+
+  <div class="grupo">
+    <div class="grupo-tit">Quantidade de linha</div>
+    <label class="linha">Metros de linha a enrolar <input type="number" id="cfgMetros" min="1" step="10"> m</label>
+    <div class="dica">Quanto de linha nova a máquina enrola na troca. Padrão: 100 m.</div>
+  </div>
+
+  <div class="grupo">
+    <div class="grupo-tit">Velocidade</div>
+    <label class="linha">Velocidade final (1 a 100) <input type="number" id="cfgVel" min="1" max="100" step="1"></label>
+    <label class="linha">Tempo de rampa <input type="number" id="cfgRampa" min="0" max="10" step="0.1"> s</label>
+    <div class="dica">Força/velocidade de enrolar + o tempo que ela leva pra subir de 0 até a velocidade final (<b>rampa suave</b>, pra não dar tranco). Padrão: 50 · 1,5 s.</div>
+  </div>
 </div>
+
+<script>
+function metrosVal(){ const v=parseFloat(localStorage.getItem('simpesca2_troca_metros')); return Math.abs(isFinite(v)&&v!==0?v:100); }
+function velVal(){ const v=parseFloat(localStorage.getItem('simpesca2_troca_velocidade')); return (isFinite(v)&&v>0)?Math.min(100,v):50; }
+function rampaVal(){ const v=parseFloat(localStorage.getItem('simpesca2_troca_rampa')); return (isFinite(v)&&v>=0)?v:1.5; }
+(function(){
+  const cm=document.getElementById('cfgMostrar');
+  cm.checked = localStorage.getItem('simpesca2_troca_mostrar')!=='0';   // padrão: mostrar
+  cm.addEventListener('change',()=>{ localStorage.setItem('simpesca2_troca_mostrar', cm.checked?'1':'0'); });
+  const el=document.getElementById('cfgMetros');
+  el.value=metrosVal();
+  el.addEventListener('change',()=>{ const v=parseFloat(el.value); if(isFinite(v)&&v>0) localStorage.setItem('simpesca2_troca_metros', v); else el.value=metrosVal(); });
+  const vel=document.getElementById('cfgVel');
+  vel.value=velVal();
+  vel.addEventListener('change',()=>{ let v=parseFloat(vel.value); if(isFinite(v)&&v>0){ v=Math.min(100,v); localStorage.setItem('simpesca2_troca_velocidade', v); vel.value=v; } else vel.value=velVal(); });
+  const ra=document.getElementById('cfgRampa');
+  ra.value=rampaVal();
+  ra.addEventListener('change',()=>{ const v=parseFloat(ra.value); if(isFinite(v)&&v>=0) localStorage.setItem('simpesca2_troca_rampa', v); else ra.value=rampaVal(); });
+})();
+</script>
 </body>
 </html>

@@ -7,20 +7,126 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#050a0f">
 <style>
-:root{--bg:#050a0f;--card:#0d151d;--border:#1a2736;--accent:#00d4ff;--text:#e0e6ed;--dim:#7b8d9e;}
+:root{--bg:#050a0f;--card:#0d151d;--border:#1a2736;--accent:#00d4ff;--green:#00e676;--red:#ff1744;--text:#e0e6ed;--dim:#7b8d9e;}
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh;}
-.wrap{max-width:640px;margin:0 auto;padding:24px 16px;}
-h1{font-size:1.3rem;color:var(--accent);font-weight:800;letter-spacing:1px;margin-bottom:12px;display:flex;align-items:center;gap:9px;}
-.emconstru{background:#0d151d;border:1px solid #1a2736;border-radius:12px;padding:20px;color:var(--dim);line-height:1.8;}
+.wrap{max-width:560px;margin:0 auto;padding:30px 18px;}
+.oculto{display:none;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:26px 22px;text-align:center;}
+h1{font-size:1.4rem;color:var(--accent);font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:10px;justify-content:center;}
+p{color:var(--text);font-size:1rem;line-height:1.7;margin-bottom:12px;}
+.metros{font-size:3rem;font-weight:900;color:var(--green);font-family:monospace;margin:18px 0 8px;text-shadow:0 0 20px rgba(0,230,118,0.35);}
+.barra{height:16px;background:#0a1018;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin:8px 0 18px;}
+.barra-fill{height:100%;width:0%;background:linear-gradient(90deg,#00b4d8,#00e676);transition:width .2s;}
+#trStatus{color:var(--dim);font-size:0.9rem;margin-bottom:18px;min-height:1.2em;}
+.btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:10px;}
+.btn{padding:16px 26px;border:1px solid;border-radius:12px;font-family:inherit;font-size:1rem;font-weight:800;cursor:pointer;background:transparent;letter-spacing:0.5px;}
+.btn.ok{border-color:var(--green);color:var(--green);}
+.btn.sec{border-color:var(--dim);color:var(--dim);}
+.btn.parar{border:none;background:var(--red);color:#fff;font-size:1.25rem;padding:20px 40px;box-shadow:0 4px 22px rgba(255,23,68,0.4);width:100%;}
 </style>
 </head>
 <body>
-<script>window.MENU_ATUAL='troca'; window.PAGINA_TEM_BLE=true;</script>
+<script>window.MENU_ATUAL='troca'; window.PAGINA_TEM_BLE=false;</script>
 <script src="menu.js"></script>
+
 <div class="wrap">
-  <h1><span>🧵</span> Troca de linha</h1>
-  <div class="emconstru">🚧 Em construção.<br>Aqui vai o passo a passo de troca de linha (com o motor/carretel). A gente define o fluxo depois.</div>
+  <!-- 1 - confirmar retirada da linha antiga -->
+  <div class="card" id="telaConfirma">
+    <h1><span>🧵</span> Troca de linha</h1>
+    <p>Antes de começar, <b>retire toda a linha antiga</b> do carretel.</p>
+    <p style="color:var(--accent);font-weight:700;">Já retirou toda a linha antiga?</p>
+    <div class="btns">
+      <button class="btn ok" onclick="comecar()">✅ Sim, já retirei</button>
+      <button class="btn sec" onclick="voltar()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- 2 - enrolando -->
+  <div class="card oculto" id="telaEnrola">
+    <h1><span>🧵</span> Enrolando a linha</h1>
+    <div class="metros"><span id="trMetros">0.0</span> <span style="font-size:1.2rem;color:var(--dim)">/ <span id="trAlvo">100</span> m</span></div>
+    <div class="barra"><div class="barra-fill" id="trBarra"></div></div>
+    <div id="trStatus">Conectando...</div>
+    <button class="btn parar" id="btnParar" onclick="pararTudo()">⏹ PARAR</button>
+    <button class="btn sec oculto" id="btnVoltarEnrola" onclick="voltar()" style="margin-top:12px;width:100%;">◀ Voltar ao menu</button>
+  </div>
+
+  <!-- 3 - concluído -->
+  <div class="card oculto" id="telaFim">
+    <h1>✅ Troca concluída!</h1>
+    <p>Enrolou <b id="trFimMetros" style="color:var(--green)">0</b> m de linha nova.</p>
+    <div class="btns"><button class="btn ok" onclick="voltar()">OK</button></div>
+  </div>
 </div>
+
+<script>
+const SERVICE_UUID="a1b2c3d4-0001-4a5b-8c6d-1234567890ab";
+const CHAR_MOTOR_UUID="a1b2c3d4-0002-4a5b-8c6d-1234567890ab";
+const CHAR_LINHA_UUID="a1b2c3d4-0003-4a5b-8c6d-1234567890ab";
+const DIRECAO=1;    // sentido de enrolar (+ puxa/gira). Se enrolar pro lado ERRADO no hardware, troque para -1.
+let bleDevice=null, motorChar=null, linhaChar=null, contInicio=0, primeira=true, metrosEnrolados=0, rodando=false, alvo=100, motorTimer=null, velFinal=50, t0=0, rampaMs=1500;
+
+function mpv(){ const v=parseFloat(localStorage.getItem('simpesca2_cal_mpv')); return (isFinite(v)&&v>0)?v:34; }
+function alvoMetros(){ const v=parseFloat(localStorage.getItem('simpesca2_troca_metros')); return Math.abs(isFinite(v)&&v!==0?v:100); }
+function velocidadeVal(){ const v=parseFloat(localStorage.getItem('simpesca2_troca_velocidade')); return (isFinite(v)&&v>0)?Math.min(100,v):50; }
+function rampaMsVal(){ const v=parseFloat(localStorage.getItem('simpesca2_troca_rampa')); return (isFinite(v)&&v>=0?v:1.5)*1000; }
+function tela(id){ ['telaConfirma','telaEnrola','telaFim'].forEach(t=>document.getElementById(t).classList.toggle('oculto', t!==id)); }
+function status(t){ const el=document.getElementById('trStatus'); if(el) el.textContent=t; }
+
+function comecar(){
+  alvo=alvoMetros(); document.getElementById('trAlvo').textContent=alvo.toFixed(0);
+  document.getElementById('btnParar').classList.remove('oculto');
+  document.getElementById('btnVoltarEnrola').classList.add('oculto');
+  tela('telaEnrola');
+  conectarEEnrolar();
+}
+async function conectarEEnrolar(){
+  if(!navigator.bluetooth){ status('Sem Web Bluetooth. Use Chrome/Edge no PC ou Android.'); return; }
+  try{
+    status('Conectando ao Bluetooth...');
+    bleDevice=await navigator.bluetooth.requestDevice({filters:[{services:[SERVICE_UUID]}]});
+    const server=await bleDevice.gatt.connect();
+    const svc=await server.getPrimaryService(SERVICE_UUID);
+    motorChar=await svc.getCharacteristic(CHAR_MOTOR_UUID);
+    linhaChar=await svc.getCharacteristic(CHAR_LINHA_UUID);
+    await linhaChar.startNotifications();
+    primeira=true; metrosEnrolados=0;
+    linhaChar.addEventListener('characteristicvaluechanged', onLinha);
+    bleDevice.addEventListener('gattserverdisconnected', ()=>{ if(rodando){ pararMotor(); status('⚠ Bluetooth caiu — motor parado.'); mostrarVoltar(); } });
+    rodando=true; velFinal=velocidadeVal(); rampaMs=rampaMsVal(); t0=performance.now();   // rampa começa agora
+    status('Enrolando... segure firme e não toque no carretel.');
+    loopMotor();
+  }catch(e){ status('Não conectou (ou cancelado). Toque em Voltar e tente de novo.'); mostrarVoltar(); }
+}
+function loopMotor(){   // reenvia ~10x/s (alimenta o watchdog do ESP) com RAMPA suave 0->velFinal
+  if(!rodando) return;
+  const prog=(rampaMs<=0)?1:Math.min(1,(performance.now()-t0)/rampaMs);   // 0..1
+  escreverMotor(DIRECAO*velFinal*prog);
+  motorTimer=setTimeout(loopMotor, 100);
+}
+function escreverMotor(pct){ if(!motorChar) return; const b=new Int8Array([Math.max(-100,Math.min(100,Math.round(pct)))]); try{ motorChar.writeValueWithoutResponse?motorChar.writeValueWithoutResponse(b):motorChar.writeValue(b); }catch(e){} }
+function onLinha(e){
+  const nova=e.target.value.getInt32(0,true);
+  if(primeira){ contInicio=nova; primeira=false; }
+  metrosEnrolados=Math.abs((nova-contInicio)/4096*mpv());
+  document.getElementById('trMetros').textContent=metrosEnrolados.toFixed(1);
+  document.getElementById('trBarra').style.width=Math.min(100,(metrosEnrolados/alvo)*100)+'%';
+  if(rodando && metrosEnrolados>=alvo) concluir();
+}
+function pararMotor(){ rodando=false; if(motorTimer){ clearTimeout(motorTimer); motorTimer=null; } escreverMotor(0); escreverMotor(0); }
+function mostrarVoltar(){ document.getElementById('btnParar').classList.add('oculto'); document.getElementById('btnVoltarEnrola').classList.remove('oculto'); }
+function pararTudo(){ pararMotor(); desconectar(); status('Parado. Toque em Voltar.'); mostrarVoltar(); }
+function concluir(){
+  pararMotor();
+  try{ localStorage.setItem('simpesca2_contagem_encoder','0'); }catch(e){}   // linha nova cheia -> zera o carretel compartilhado
+  desconectar();
+  document.getElementById('trFimMetros').textContent=metrosEnrolados.toFixed(0);
+  tela('telaFim');
+}
+function desconectar(){ try{ if(bleDevice&&bleDevice.gatt&&bleDevice.gatt.connected) bleDevice.gatt.disconnect(); }catch(e){} }
+function voltar(){ pararMotor(); desconectar(); location.href='jogo.html'; }
+window.addEventListener('beforeunload', ()=>{ pararMotor(); desconectar(); });
+</script>
 </body>
 </html>

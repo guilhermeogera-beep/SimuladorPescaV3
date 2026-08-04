@@ -35,6 +35,14 @@
   const atual = window.MENU_ATUAL || '';
   const temBLE = !!window.PAGINA_TEM_BLE;
 
+  // --------------------------------------------------------------- cadeado / senha
+  const SENHA='1234';
+  const LIVRE=['exibicao','premios','jogo','desafio'];   // sempre acessíveis, mesmo bloqueado
+  function destravado(){ return localStorage.getItem('simpesca2_destravado')==='1'; }
+  function ehLivre(id){ return LIVRE.indexOf(id)>=0; }
+  function pedirSenha(){ const s=prompt('🔒 Bloqueado. Senha para liberar:'); if(s===null) return false; if(s===SENHA){ localStorage.setItem('simpesca2_destravado','1'); return true; } alert('Senha incorreta.'); return false; }
+  function podeIr(id){ return ehLivre(id) || destravado() || pedirSenha(); }   // livre, ou já liberado, ou pede senha
+
   // --------------------------------------------------------------- estilos
   const css = `
   :root{ --mnu-accent:#00d4ff; --mnu-bg:#0a1420; --mnu-border:#1a2736; --mnu-txt:#e0e6ed; --mnu-dim:#7b8d9e; }
@@ -73,6 +81,13 @@
   .mnu-link.ativo{background:rgba(0,212,255,0.12);border-left-color:var(--mnu-accent);color:#fff;font-weight:700;}
   .mnu-link .mnu-ic{width:22px;text-align:center;font-size:1.05rem;flex-shrink:0;}
   .mnu-sep{font-size:0.62rem;letter-spacing:2px;color:var(--mnu-dim);text-transform:uppercase;padding:12px 18px 4px;}
+  .mnu-lock{display:flex;align-items:center;gap:12px;margin:8px 12px;padding:11px 14px;border-radius:9px;cursor:pointer;
+    background:rgba(255,90,90,0.10);border:1px solid rgba(255,90,90,0.4);color:#ffb3b3;font-size:0.85rem;font-weight:700;}
+  .mnu-lock.aberto{background:rgba(0,230,118,0.10);border-color:rgba(0,230,118,0.4);color:#8ff0bf;}
+  .mnu-lock .mnu-ic{font-size:1.1rem;}
+  .mnu-cad{margin-left:auto;font-size:0.85rem;opacity:0.85;display:none;}
+  body.mnu-travado .mnu-cad{display:inline;}
+  body.mnu-travado .mnu-link[data-id]:not([data-id="exibicao"]):not([data-id="premios"]):not([data-id="jogo"]):not([data-id="desafio"]){opacity:0.62;}
   body{padding-top:52px;}   /* empurra o conteúdo pra baixo da barra fixa */
   #mnuTopRight{overflow-x:auto;}   /* se faltar espaço, rola em vez de quebrar */
   @media(max-width:860px){ #mnuTitulo{display:none;} }
@@ -87,8 +102,8 @@
     return `<button class="${cl}" ${onclick} title="${j.nome}"><span>${j.ic}</span><span class="mnu-jogo-txt">${j.curto}</span></button>`;
   }).join('');
   const conectarHtml = temBLE ? `<button id="mnuConectar" onclick="(window.conectarBLE&&window.conectarBLE())">🔌 Conectar</button>` : '';
-  const rankHtml = `<button class="mnu-jogo" onclick="location.href='ranking.html#resumo'" title="Ranking (resumo)"><span>🏆</span><span class="mnu-jogo-txt">Ranking</span></button>`;   // ranking rápido/resumido no topo
-  const trocaHtml = `<button class="mnu-jogo" onclick="location.href='troca-linha.html'" title="Troca de linha"><span>🧵</span><span class="mnu-jogo-txt">Troca de linha</span></button>`;
+  const rankHtml = `<button class="mnu-jogo" onclick="window.mnuIrProtegido('ranking.html#resumo')" title="Ranking (resumo)"><span>🏆</span><span class="mnu-jogo-txt">Ranking</span></button>`;   // ranking rápido/resumido no topo
+  const trocaHtml = (localStorage.getItem('simpesca2_troca_mostrar')!=='0') ? `<button class="mnu-jogo" onclick="window.mnuIrProtegido('troca-linha.html')" title="Troca de linha"><span>🧵</span><span class="mnu-jogo-txt">Troca de linha</span></button>` : '';   // exibe conforme a config
   const tituloAtual = (LINKS.concat(JOGOS.map(j=>({id:j.id,nome:j.nome}))).find(x=>x.id===atual)||{}).nome || 'SimPesca';
 
   const bar=document.createElement('div'); bar.id='mnuTopbar';
@@ -103,7 +118,8 @@
   const drw=document.createElement('div'); drw.id='mnuDrawer';
   const linksHtml = LINKS.map(l=>{
     const cl = l.id===atual ? 'mnu-link ativo' : 'mnu-link';
-    return `<a class="${cl}" data-id="${l.id}" href="${l.pg}"><span class="mnu-ic">${l.ic}</span><span>${l.nome}</span></a>`;
+    const cad = ehLivre(l.id) ? '' : '<span class="mnu-cad">🔒</span>';   // cadeado nos bloqueados
+    return `<a class="${cl}" data-id="${l.id}" href="${l.pg}"><span class="mnu-ic">${l.ic}</span><span>${l.nome}</span>${cad}</a>`;
   }).join('');
   const jogosDrawer = JOGOS.map(j=>{
     const cl = j.id===atual ? 'mnu-link ativo' : 'mnu-link';
@@ -112,6 +128,7 @@
   drw.innerHTML =
     `<div id="mnuDrawerHead"><b>SIMPESCA</b><button id="mnuFechar" aria-label="Fechar">✕</button></div>`+
     `<div id="mnuLista">`+
+      `<div class="mnu-lock" id="mnuLock"><span class="mnu-ic" id="mnuLockIc">🔒</span><span id="mnuLockTxt">Bloqueado — toque para liberar</span></div>`+
       `<div class="mnu-sep">🎮 Jogos</div>${jogosDrawer}`+
       `<div class="mnu-sep">🛠️ Configurações</div>${linksHtml}`+
     `</div>`;
@@ -123,6 +140,25 @@
   document.getElementById('mnuFechar').addEventListener('click', fechar);
   back.addEventListener('click', fechar);
   drw.querySelectorAll('.mnu-link').forEach(a=>a.addEventListener('click', fechar));   // fecha a gaveta ao escolher (inclusive quando é só troca de #hash, sem recarregar)
+
+  // cadeado: intercepta itens bloqueados
+  drw.querySelectorAll('.mnu-link[data-id]').forEach(a=>{
+    a.addEventListener('click', function(ev){ if(!podeIr(a.getAttribute('data-id'))){ ev.preventDefault(); ev.stopImmediatePropagation(); } }, true);
+  });
+  function atualizaLock(){
+    const on=destravado(); document.body.classList.toggle('mnu-travado', !on);
+    const ic=document.getElementById('mnuLockIc'), tx=document.getElementById('mnuLockTxt'), ln=document.getElementById('mnuLock');
+    if(ic) ic.textContent = on ? '🔓' : '🔒';
+    if(tx) tx.textContent = on ? 'Liberado — toque para bloquear' : 'Bloqueado — toque para liberar';
+    if(ln) ln.classList.toggle('aberto', on);
+  }
+  document.getElementById('mnuLock').addEventListener('click', function(){
+    if(destravado()){ localStorage.setItem('simpesca2_destravado','0'); }   // bloquear é direto
+    else { if(!pedirSenha()) return; }                                       // liberar pede senha
+    atualizaLock();
+  });
+  atualizaLock();
+  window.mnuIrProtegido=function(url){ if(podeIr('_')) location.href=url; };   // '_' nunca é livre -> pede senha se bloqueado
 
   // --------------------------------------------------------------- API de conexão p/ a página
   window.menuStatusConexao=function(ok, txt){
