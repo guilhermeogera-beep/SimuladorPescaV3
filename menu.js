@@ -24,8 +24,8 @@
   ];
   // --- jogos (topo direito) ---
   const JOGOS=[
-    {ic:'🎣', nome:'Quem enrola mais linha',        curto:'Enrola +', pg:'jogo.html',    id:'jogo'},
-    {ic:'⏱', nome:'Quem pega o peixe mais rápido', curto:'Pega +',   pg:'desafio.html', id:'desafio'}
+    {ic:'🎣', nome:'Quem enrola mais',            curto:'Quem enrola mais',            pg:'jogo.html',    id:'jogo'},
+    {ic:'⏱', nome:'Quem tira o peixe mais rápido', curto:'Quem tira o peixe mais rápido', pg:'desafio.html', id:'desafio'}
   ];
 
   const atual = window.MENU_ATUAL || '';
@@ -70,7 +70,9 @@
   .mnu-link .mnu-ic{width:22px;text-align:center;font-size:1.05rem;flex-shrink:0;}
   .mnu-sep{font-size:0.62rem;letter-spacing:2px;color:var(--mnu-dim);text-transform:uppercase;padding:12px 18px 4px;}
   body{padding-top:52px;}   /* empurra o conteúdo pra baixo da barra fixa */
-  @media(max-width:420px){ .mnu-jogo .mnu-jogo-txt{display:none;} #mnuTitulo{display:none;} }
+  #mnuTopRight{overflow-x:auto;}   /* se faltar espaço, rola em vez de quebrar */
+  @media(max-width:860px){ #mnuTitulo{display:none;} }
+  @media(max-width:600px){ .mnu-jogo .mnu-jogo-txt{display:none;} }
   `;
   const st=document.createElement('style'); st.id='mnuEstilo'; st.textContent=css; document.head.appendChild(st);
 
@@ -81,7 +83,7 @@
     return `<button class="${cl}" ${onclick} title="${j.nome}"><span>${j.ic}</span><span class="mnu-jogo-txt">${j.curto}</span></button>`;
   }).join('');
   const conectarHtml = temBLE ? `<button id="mnuConectar" onclick="(window.conectarBLE&&window.conectarBLE())">🔌 Conectar</button>` : '';
-  const rankHtml = `<button class="mnu-jogo" onclick="location.href='ranking.html#resumo'" title="Ranking (resumo)"><span>🏆</span></button>`;   // ranking rápido/resumido no topo
+  const rankHtml = `<button class="mnu-jogo" onclick="location.href='ranking.html#resumo'" title="Ranking (resumo)"><span>🏆</span><span class="mnu-jogo-txt">Ranking</span></button>`;   // ranking rápido/resumido no topo
   const tituloAtual = (LINKS.concat(JOGOS.map(j=>({id:j.id,nome:j.nome}))).find(x=>x.id===atual)||{}).nome || 'SimPesca';
 
   const bar=document.createElement('div'); bar.id='mnuTopbar';
