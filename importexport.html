@@ -4,21 +4,93 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>SimPesca — Importação / exportação</title>
+<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#050a0f">
 <style>
+:root{--bg:#050a0f;--card:#0d151d;--border:#1a2736;--accent:#00d4ff;--green:#00e676;--red:#ff1744;--text:#e0e6ed;--dim:#7b8d9e;}
 *{box-sizing:border-box;margin:0;padding:0;}
-body{background:#050a0f;color:#e0e6ed;font-family:'Segoe UI',sans-serif;min-height:100vh;}
-.wrap{max-width:760px;margin:0 auto;padding:24px 18px;}
-h1{font-size:1.3rem;color:#00d4ff;font-weight:800;letter-spacing:1px;margin-bottom:12px;}
-.emconstru{background:#0d151d;border:1px solid #1a2736;border-radius:12px;padding:20px;color:#7b8d9e;line-height:1.8;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh;}
+.wrap{max-width:640px;margin:0 auto;padding:22px 16px;}
+h1{font-size:1.25rem;color:var(--accent);font-weight:800;letter-spacing:1px;margin-bottom:6px;display:flex;align-items:center;gap:9px;}
+.sub{color:var(--dim);font-size:0.82rem;margin-bottom:18px;line-height:1.5;}
+.grupo{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;}
+.grupo-tit{font-size:0.9rem;font-weight:700;color:var(--text);margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+.grupo-sub{font-size:0.74rem;color:var(--dim);margin-bottom:12px;}
+.linha-btn{display:flex;gap:10px;flex-wrap:wrap;}
+.btn{padding:11px 18px;border:1px solid;border-radius:8px;font-family:inherit;font-size:0.8rem;font-weight:700;cursor:pointer;background:transparent;letter-spacing:0.5px;}
+.btn-green{border-color:var(--green);color:var(--green);}
+.soon{background:#0d151d;border:1px dashed #1a2736;border-radius:12px;padding:16px;color:var(--dim);font-size:0.8rem;line-height:1.6;}
+#msg{margin-top:6px;font-size:0.85rem;font-weight:700;min-height:1.1em;color:var(--green);}
 </style>
 </head>
 <body>
 <script>window.MENU_ATUAL='importexport';</script>
 <script src="menu.js"></script>
 <div class="wrap">
-  <h1>↔️ Importação / exportação</h1>
-  <div class="emconstru">🚧 Em construção.<br>Virão todos os botões de exportar e importar.</div>
+  <h1><span>↔️</span> Importação / exportação</h1>
+  <div class="sub">Salvar em arquivo (.json) ou trazer de volta. Útil pra backup e pra passar dados entre aparelhos.</div>
+
+  <div class="grupo">
+    <div class="grupo-tit">🎣 Ranking — Enrola mais linha</div>
+    <div class="grupo-sub">Todas as jogadas do jogo de enrolar (por metros).</div>
+    <div class="linha-btn">
+      <button class="btn btn-green" onclick="expEnrola()">⬇ Exportar</button>
+      <button class="btn btn-green" onclick="document.getElementById('impEnrola').click()">⬆ Importar</button>
+      <input type="file" id="impEnrola" accept="application/json,.json" style="display:none" onchange="impEnrolaFile(event)">
+    </div>
+  </div>
+
+  <div class="grupo">
+    <div class="grupo-tit">⏱ Ranking — Desafio</div>
+    <div class="grupo-sub">Todas as jogadas do desafio (por pontuação).</div>
+    <div class="linha-btn">
+      <button class="btn btn-green" onclick="expDesafio()">⬇ Exportar</button>
+      <button class="btn btn-green" onclick="document.getElementById('impDesafio').click()">⬆ Importar</button>
+      <input type="file" id="impDesafio" accept="application/json,.json" style="display:none" onchange="impDesafioFile(event)">
+    </div>
+  </div>
+
+  <div id="msg"></div>
+
+  <div class="soon" style="margin-top:6px;">⚙️ <b>Configurações</b> e <b>curvas das simulações</b> entram aqui em breve, junto com as páginas de Gerador e Motor (é onde esses dados são definidos).</div>
 </div>
+
+<script>
+function msg(t){ document.getElementById('msg').textContent=t; }
+function baixar(nome, obj){ const blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=nome; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1500); }
+function lerArr(chave){ try{ const r=JSON.parse(localStorage.getItem(chave)||'[]'); return Array.isArray(r)?r:[]; }catch(e){ return []; } }
+
+// ── Enrola mais ──
+function expEnrola(){ const d=lerArr('simpesca2_ranking'); baixar('ranking_enrola.json', d); msg('Exportado: '+d.length+' jogada(s) de Enrola mais.'); }
+function impEnrolaFile(ev){
+  const f=ev.target.files[0]; ev.target.value=''; if(!f) return;
+  const r=new FileReader();
+  r.onload=e=>{ try{
+    const d=JSON.parse(e.target.result);
+    const nova=Array.isArray(d)?d:(Array.isArray(d.ranking)?d.ranking:null); if(!nova) throw 0;
+    const atual=lerArr('simpesca2_ranking'), chave=x=>[x.nome,x.sim,x.metros,x.data].join('|'), ex=new Set(atual.map(chave)); let add=0;
+    nova.forEach(x=>{ if(x && x.nome!=null && !ex.has(chave(x))){ atual.push(x); ex.add(chave(x)); add++; } });
+    localStorage.setItem('simpesca2_ranking', JSON.stringify(atual));
+    msg(add+' jogada(s) importada(s)'+(nova.length-add>0?' · '+(nova.length-add)+' repetida(s) ignorada(s)':'')+'.');
+  }catch(err){ msg('Arquivo inválido — use um ranking de Enrola mais (.json).'); } };
+  r.readAsText(f);
+}
+
+// ── Desafio ──
+function expDesafio(){ const d=lerArr('simpesca2_aleat_ranking'); baixar('ranking_desafio.json', {versao:1,tipo:'ranking_desafio',ranking:d}); msg('Exportado: '+d.length+' jogada(s) de Desafio.'); }
+function impDesafioFile(ev){
+  const f=ev.target.files[0]; ev.target.value=''; if(!f) return;
+  const r=new FileReader();
+  r.onload=e=>{ try{
+    const d=JSON.parse(e.target.result);
+    const nova=Array.isArray(d)?d:(d&&Array.isArray(d.ranking)?d.ranking:null); if(!nova) throw 0;
+    const atual=lerArr('simpesca2_aleat_ranking'), chave=x=>[x.nome,x.sim,x.score,x.data].join('|'), ex=new Set(atual.map(chave)); let add=0;
+    nova.forEach(x=>{ if(x && !ex.has(chave(x))){ atual.push(x); ex.add(chave(x)); add++; } });
+    localStorage.setItem('simpesca2_aleat_ranking', JSON.stringify(atual));
+    msg(add+' jogada(s) importada(s)'+(nova.length-add>0?' · '+(nova.length-add)+' repetida(s) ignorada(s)':'')+'.');
+  }catch(err){ msg('Arquivo inválido — use um ranking de Desafio (.json).'); } };
+  r.readAsText(f);
+}
+</script>
 </body>
 </html>
