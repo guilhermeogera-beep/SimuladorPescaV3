@@ -35,6 +35,12 @@ input[type=checkbox]{accent-color:var(--accent);cursor:pointer;width:19px;height
     <label class="linha"><input type="checkbox" id="cfgCarretel"> Linha no carretel / trava (📍)</label>
     <div class="dica">Úteis pra calibrar/testar. Em modo apresentação, pode deixar tudo desligado.</div>
   </div>
+
+  <div class="grupo">
+    <div class="grupo-tit">🧵 Troca de linha</div>
+    <label class="linha"><input type="checkbox" id="cfgTrocaTeste"> Botões de teste (+ / −) na tela de troca de linha</label>
+    <div class="dica">Permite simular o enrolar sem hardware, pra testar o fluxo.</div>
+  </div>
 </div>
 
 <script>
@@ -43,6 +49,7 @@ function bindCheck(id, chave, padrao){ const el=document.getElementById(id); if(
 bindCheck('cfgTeste','simpesca2_mostrar_teste',true);
 bindCheck('cfgSync','simpesca2_hud_sync',true);
 bindCheck('cfgCarretel','simpesca2_hud_carretel',true);
+bindCheck('cfgTrocaTeste','simpesca2_troca_teste',true);
 </script>
 </body>
 </html>

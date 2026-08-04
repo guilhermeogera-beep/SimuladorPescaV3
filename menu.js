@@ -102,7 +102,7 @@
     return `<button class="${cl}" ${onclick} title="${j.nome}"><span>${j.ic}</span><span class="mnu-jogo-txt">${j.curto}</span></button>`;
   }).join('');
   const conectarHtml = temBLE ? `<button id="mnuConectar" onclick="(window.conectarBLE&&window.conectarBLE())">🔌 Conectar</button>` : '';
-  const rankHtml = `<button class="mnu-jogo" onclick="window.mnuIrProtegido('ranking.html#resumo')" title="Ranking (resumo)"><span>🏆</span><span class="mnu-jogo-txt">Ranking</span></button>`;   // ranking rápido/resumido no topo
+  const rankHtml = `<button class="mnu-jogo" onclick="location.href='ranking.html#resumo'" title="Ranking (resumo)"><span>🏆</span><span class="mnu-jogo-txt">Ranking</span></button>`;   // ranking resumido do topo: SEMPRE liberado
   const trocaHtml = (localStorage.getItem('simpesca2_troca_mostrar')!=='0') ? `<button class="mnu-jogo" onclick="window.mnuIrProtegido('troca-linha.html')" title="Troca de linha"><span>🧵</span><span class="mnu-jogo-txt">Troca de linha</span></button>` : '';   // exibe conforme a config
   const tituloAtual = (LINKS.concat(JOGOS.map(j=>({id:j.id,nome:j.nome}))).find(x=>x.id===atual)||{}).nome || 'SimPesca';
 

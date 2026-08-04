@@ -35,8 +35,8 @@ input[type=number]{width:80px;background:#0d151d;border:1px solid var(--accent);
 
   <div class="grupo">
     <div class="grupo-tit">Quantidade de linha</div>
-    <label class="linha">Metros de linha a enrolar <input type="number" id="cfgMetros" min="1" step="10"> m</label>
-    <div class="dica">Quanto de linha nova a máquina enrola na troca. Padrão: 100 m.</div>
+    <label class="linha">Metros de linha a enrolar <input type="number" id="cfgMetros" step="10"> m</label>
+    <div class="dica">Quanto de linha nova a máquina enrola na troca. Ao enrolar, o carretel fica mais negativo — por isso o padrão é <b>-100</b> (aceita valor negativo).</div>
   </div>
 
   <div class="grupo">
@@ -48,7 +48,7 @@ input[type=number]{width:80px;background:#0d151d;border:1px solid var(--accent);
 </div>
 
 <script>
-function metrosVal(){ const v=parseFloat(localStorage.getItem('simpesca2_troca_metros')); return Math.abs(isFinite(v)&&v!==0?v:100); }
+function metrosVal(){ const v=parseFloat(localStorage.getItem('simpesca2_troca_metros')); return (isFinite(v)&&v!==0)?v:-100; }   // aceita negativo (padrão -100)
 function velVal(){ const v=parseFloat(localStorage.getItem('simpesca2_troca_velocidade')); return (isFinite(v)&&v>0)?Math.min(100,v):50; }
 function rampaVal(){ const v=parseFloat(localStorage.getItem('simpesca2_troca_rampa')); return (isFinite(v)&&v>=0)?v:1.5; }
 (function(){
@@ -57,7 +57,7 @@ function rampaVal(){ const v=parseFloat(localStorage.getItem('simpesca2_troca_ra
   cm.addEventListener('change',()=>{ localStorage.setItem('simpesca2_troca_mostrar', cm.checked?'1':'0'); });
   const el=document.getElementById('cfgMetros');
   el.value=metrosVal();
-  el.addEventListener('change',()=>{ const v=parseFloat(el.value); if(isFinite(v)&&v>0) localStorage.setItem('simpesca2_troca_metros', v); else el.value=metrosVal(); });
+  el.addEventListener('change',()=>{ const v=parseFloat(el.value); if(isFinite(v)&&v!==0) localStorage.setItem('simpesca2_troca_metros', v); else el.value=metrosVal(); });
   const vel=document.getElementById('cfgVel');
   vel.value=velVal();
   vel.addEventListener('change',()=>{ let v=parseFloat(vel.value); if(isFinite(v)&&v>0){ v=Math.min(100,v); localStorage.setItem('simpesca2_troca_velocidade', v); vel.value=v; } else vel.value=velVal(); });

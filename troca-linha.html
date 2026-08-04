@@ -48,6 +48,10 @@ p{color:var(--text);font-size:1rem;line-height:1.7;margin-bottom:12px;}
     <div class="metros"><span id="trMetros">0.0</span> <span style="font-size:1.2rem;color:var(--dim)">/ <span id="trAlvo">100</span> m</span></div>
     <div class="barra"><div class="barra-fill" id="trBarra"></div></div>
     <div id="trStatus">Conectando...</div>
+    <div id="trTeste" class="oculto" style="display:flex;gap:10px;justify-content:center;margin:0 0 14px;">
+      <button class="btn sec" style="padding:10px 16px;font-size:0.85rem;" onclick="simEncoder(-10)">🎣 −10 m</button>
+      <button class="btn sec" style="padding:10px 16px;font-size:0.85rem;" onclick="simEncoder(10)">+10 m</button>
+    </div>
     <button class="btn parar" id="btnParar" onclick="pararTudo()">⏹ PARAR</button>
     <button class="btn sec oculto" id="btnVoltarEnrola" onclick="voltar()" style="margin-top:12px;width:100%;">◀ Voltar ao menu</button>
   </div>
@@ -68,7 +72,9 @@ const DIRECAO=1;    // sentido de enrolar (+ puxa/gira). Se enrolar pro lado ERR
 let bleDevice=null, motorChar=null, linhaChar=null, contInicio=0, primeira=true, metrosEnrolados=0, rodando=false, alvo=100, motorTimer=null, velFinal=50, t0=0, rampaMs=1500;
 
 function mpv(){ const v=parseFloat(localStorage.getItem('simpesca2_cal_mpv')); return (isFinite(v)&&v>0)?v:34; }
-function alvoMetros(){ const v=parseFloat(localStorage.getItem('simpesca2_troca_metros')); return Math.abs(isFinite(v)&&v!==0?v:100); }
+function inverterDir(){ return (localStorage.getItem('simpesca2_cal_inv')||'1')==='1'; }   // mesmo sinal do carretel do jogo
+function contagemParaMetros(c){ let m=(c/4096)*mpv(); if(inverterDir()) m=-m; return m; }
+function alvoMetros(){ const v=parseFloat(localStorage.getItem('simpesca2_troca_metros')); return (isFinite(v)&&v!==0)?v:-100; }   // COM SINAL (padrão -100)
 function velocidadeVal(){ const v=parseFloat(localStorage.getItem('simpesca2_troca_velocidade')); return (isFinite(v)&&v>0)?Math.min(100,v):50; }
 function rampaMsVal(){ const v=parseFloat(localStorage.getItem('simpesca2_troca_rampa')); return (isFinite(v)&&v>=0?v:1.5)*1000; }
 function tela(id){ ['telaConfirma','telaEnrola','telaFim'].forEach(t=>document.getElementById(t).classList.toggle('oculto', t!==id)); }
@@ -78,15 +84,23 @@ function comecar(){
   alvo=alvoMetros(); document.getElementById('trAlvo').textContent=alvo.toFixed(0);
   document.getElementById('btnParar').classList.remove('oculto');
   document.getElementById('btnVoltarEnrola').classList.add('oculto');
+  document.getElementById('trTeste').classList.toggle('oculto', localStorage.getItem('simpesca2_troca_teste')==='0');   // botões de teste conforme Testes/ajustes
   tela('telaEnrola');
   conectarEEnrolar();
+}
+function simEncoder(dM){   // teste sem hardware: simula o encoder (enrola/solta)
+  metrosEnrolados += dM;
+  document.getElementById('trMetros').textContent=metrosEnrolados.toFixed(1);
+  document.getElementById('trBarra').style.width=Math.min(100, Math.abs(metrosEnrolados)/Math.abs(alvo)*100)+'%';
+  if(Math.abs(metrosEnrolados)>=Math.abs(alvo)) concluir();
 }
 async function conectarEEnrolar(){
   if(!navigator.bluetooth){ status('Sem Web Bluetooth. Use Chrome/Edge no PC ou Android.'); return; }
   try{
     status('Conectando ao Bluetooth...');
-    bleDevice=await navigator.bluetooth.requestDevice({filters:[{services:[SERVICE_UUID]}]});
-    const server=await bleDevice.gatt.connect();
+    let server=null;
+    if(navigator.bluetooth.getDevices){ try{ const ds=await navigator.bluetooth.getDevices(); if(ds&&ds.length){ bleDevice=ds[0]; server=await bleDevice.gatt.connect(); } }catch(e){ server=null; } }   // AUTOMÁTICO: reconecta num aparelho já pareado (sem caixa)
+    if(!server){ bleDevice=await navigator.bluetooth.requestDevice({filters:[{services:[SERVICE_UUID]}]}); server=await bleDevice.gatt.connect(); }   // 1ª vez (ou se o automático falhar): abre a caixa
     const svc=await server.getPrimaryService(SERVICE_UUID);
     motorChar=await svc.getCharacteristic(CHAR_MOTOR_UUID);
     linhaChar=await svc.getCharacteristic(CHAR_LINHA_UUID);
@@ -109,10 +123,10 @@ function escreverMotor(pct){ if(!motorChar) return; const b=new Int8Array([Math.
 function onLinha(e){
   const nova=e.target.value.getInt32(0,true);
   if(primeira){ contInicio=nova; primeira=false; }
-  metrosEnrolados=Math.abs((nova-contInicio)/4096*mpv());
+  metrosEnrolados=contagemParaMetros(nova-contInicio);   // COM SINAL (fica negativo ao enrolar, igual ao carretel)
   document.getElementById('trMetros').textContent=metrosEnrolados.toFixed(1);
-  document.getElementById('trBarra').style.width=Math.min(100,(metrosEnrolados/alvo)*100)+'%';
-  if(rodando && metrosEnrolados>=alvo) concluir();
+  document.getElementById('trBarra').style.width=Math.min(100, Math.abs(metrosEnrolados)/Math.abs(alvo)*100)+'%';
+  if(rodando && Math.abs(metrosEnrolados)>=Math.abs(alvo)) concluir();   // para pela QUANTIDADE (magnitude), qualquer sinal
 }
 function pararMotor(){ rodando=false; if(motorTimer){ clearTimeout(motorTimer); motorTimer=null; } escreverMotor(0); escreverMotor(0); }
 function mostrarVoltar(){ document.getElementById('btnParar').classList.add('oculto'); document.getElementById('btnVoltarEnrola').classList.remove('oculto'); }
