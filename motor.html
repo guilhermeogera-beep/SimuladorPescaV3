@@ -58,6 +58,7 @@ input[type="range"]::-webkit-slider-thumb{height:24px;width:24px;border-radius:5
 .btn-colapso:hover{color:var(--accent);}
 .recolhivel{cursor:pointer;user-select:none;}
 .card.card-colapsado > :not(:first-child){display:none !important;}
+.card[data-sec]{display:none;}   /* seções (calibração/controle/motor/gerador): só a do hash aparece */
 .card-chevron{display:inline-block;transition:transform 0.15s;font-size:0.8rem;margin-right:3px;}
 .card-colapsado .card-chevron{transform:rotate(-90deg);}
 .sim-bloco.colapsado .sim-corpo,
@@ -136,8 +137,8 @@ select{background:var(--surface);border:1px solid var(--border);color:var(--text
 <div class="rotacionar-dica">📱 <span>Tela apertada pra editar? Force a <b>paisagem</b> + tela cheia:</span><br><button type="button" onclick="forcarPaisagem()">🔄 Forçar paisagem</button></div>
 <button type="button" id="btnSairFS" onclick="voltarNormal()">↩ Voltar ao normal</button>
 
-<div class="card" id="gaugeArea">
-  <div id="gaugeLabel" class="secao-titulo recolhivel" data-cardkey="motor" onclick="toggleCard(this)"><span class="card-chevron">▾</span><span>🎚️</span> Controle Manual</div>
+<div class="card" id="gaugeArea" data-sec="controle">
+  <div id="gaugeLabel" class="secao-titulo"><span>🎚️</span> Controle Manual</div>
   <div id="gaugePct">0%</div>
   <div id="gaugeBar"><div id="gaugeBarFill"></div></div>
   <div id="gaugeVolt">solto</div>
@@ -145,6 +146,13 @@ select{background:var(--surface);border:1px solid var(--border);color:var(--text
     <div class="secao-titulo" style="justify-content:center;"><span>⚙️</span> Teste Manual (puxa + / freia −)</div>
     <input type="range" id="motorSlider" min="-20" max="40" value="0">
     <button type="button" onclick="pararMotorManual()" style="display:block;margin:10px auto 0;background:#c1121f;color:#fff;border:none;border-radius:7px;padding:6px 20px;font-size:0.74rem;font-weight:700;letter-spacing:0.5px;cursor:pointer;">⏹ PARAR (0)</button>
+  </div>
+</div>
+
+<!-- CONFIGURAÇÃO DO MOTOR (RPM / freio) -->
+<div class="card" data-sec="motor">
+  <div class="secao-titulo"><span>🔧</span> Configuração do motor</div>
+  <div style="margin-top:12px;">
     <div class="cal-campo" style="align-items:center;margin-top:10px;" title="Rotação (ERPM) da corrida MAIS FRACA (valor baixo da curva). Garante que o motor gira em valor baixo sem travar. Vai pro ESP por Bluetooth ao conectar/salvar.">
       <label>🐢 RPM mín (corrida fraca)</label>
       <input type="number" id="calRpmMin" step="50" min="0" value="500" onchange="salvarCal()">
@@ -165,19 +173,20 @@ select{background:var(--surface);border:1px solid var(--border);color:var(--text
       <label>🔒 Repouso máx — peixe grande (A)</label>
       <input type="number" id="calFreioRepMax" step="0.1" min="0" value="4" onchange="salvarCal()">
     </div>
+    <div style="margin-top:14px;"><button class="btn btn-green" onclick="salvarCal()">💾 Salvar</button></div>
   </div>
 </div>
 
 <!-- CALIBRAÇÃO DO ENCODER -->
-<div class="card">
-  <div class="secao-titulo recolhivel" data-cardkey="calibracao" onclick="toggleCard(this)"><span class="card-chevron">▾</span><span>📏</span> Encoder</div>
+<div class="card" data-sec="calibracao">
+  <div class="secao-titulo"><span>📏</span> Encoder</div>
   <div class="cal-grid">
     <div class="cal-campo"><label>Metros por volta</label><input type="number" id="calMpv" step="0.0001" min="0" value="0.0854"></div>
     <button class="btn btn-green" onclick="salvarCal()">💾 Salvar</button>
     <button class="btn btn-green" onclick="exportarConfig()" title="Baixa config.json (backup manual)">⬇ Exportar config.json</button>
     <span id="cfgSyncStatus" style="font-size:11px;color:#7b8d9e;align-self:center;"></span>
   </div>
-  <div style="margin-top:12px;padding-top:12px;border-top:1px solid #1a2736;">
+  <div style="display:none;">   <!-- token/GitHub migrou para a página "Conexão GitHub"; elementos mantidos ocultos p/ o JS não quebrar -->
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <span style="font-size:12px;color:#e0e6ed;white-space:nowrap;">☁️ Salvar automático no GitHub</span>
       <span id="ghAutoStatus" style="font-size:12px;font-weight:bold;"></span>
@@ -206,7 +215,7 @@ select{background:var(--surface);border:1px solid var(--border);color:var(--text
 </div>
 
 <!-- CONTADORES DE LINHA (teste) -->
-<div class="card">
+<div class="card" data-sec="calibracao">
   <div class="secao-titulo recolhivel" data-cardkey="linha" onclick="toggleCard(this)"><span class="card-chevron">▾</span><span>🎣</span> Controle de Carretel<button onclick="event.stopPropagation(); toggleCarretelBtns()" title="Esconder/mostrar os botões (deixa só as 3 caixas de valores)" style="margin-left:auto;background:none;border:1px solid var(--border);border-radius:5px;color:var(--text-dim);cursor:pointer;font-size:0.62rem;padding:3px 9px;text-transform:none;letter-spacing:0;">🔧 botões</button></div>
   <div class="cont3" style="display:flex;gap:14px;flex-wrap:wrap;">
     <div style="flex:1;min-width:120px;background:rgba(0,230,118,0.06);border:1px solid rgba(0,230,118,0.35);border-radius:10px;padding:14px;text-align:center;">
@@ -232,7 +241,7 @@ select{background:var(--surface);border:1px solid var(--border);color:var(--text
 </div>
 
 <!-- EDITOR DE CURVA POR PONTOS -->
-<div class="card">
+<div class="card" data-sec="gerador">
   <div class="secao-titulo" style="margin-bottom:12px"><span>⚡</span> Curva de Potência (por pontos) <span id="copiaAviso" class="copia-aviso"></span></div>
   <div id="simsContainer"></div>
 
@@ -246,7 +255,7 @@ select{background:var(--surface);border:1px solid var(--border);color:var(--text
 </div>
 
 <!-- EXPORTAÇÃO / IMPORTAÇÃO -->
-<div class="card">
+<div class="card" data-sec="gerador">
   <div class="secao-titulo recolhivel" data-cardkey="export" onclick="toggleCard(this)"><span class="card-chevron">▾</span><span>💾</span> Exportar / Importar</div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;">
     <select id="selSimAcao"><option value="0">Pirarara</option><option value="1">Tambacu</option><option value="2">Tucunaré</option><option value="3">Dourado</option><option value="4">Trairão</option><option value="5">Jaú</option><option value="desafio">🎯 Desafio Pirarará</option><option value="desafio_tambaqui">🎯 Desafio Tambacu</option></select>
@@ -261,8 +270,8 @@ select{background:var(--surface);border:1px solid var(--border);color:var(--text
   </div>
 </div>
 
-<div class="card">
-  <div class="secao-titulo recolhivel" data-cardkey="terminal" onclick="toggleCard(this)" style="margin-bottom:10px;"><span class="card-chevron">▾</span><span>📋</span> Terminal de Eventos</div>
+<div class="card" data-sec="terminal">
+  <div class="secao-titulo" style="margin-bottom:10px;"><span>📋</span> Terminal de Eventos</div>
   <div id="log"><span class="info">Aguardando inicialização...</span></div>
 </div>
 
@@ -488,6 +497,17 @@ function toggleColapso(i){ const corpo=document.getElementById('corpo'+i); if(!c
 // Recolhe/expande um CARD de config inteiro (esconde tudo menos o cabeçalho). Estado salvo por data-cardkey.
 function toggleCard(el){ const card=el.closest('.card'); if(!card) return; const rec=!card.classList.contains('card-colapsado'); card.classList.toggle('card-colapsado',rec); const k=el.dataset.cardkey; if(k) localStorage.setItem('simpesca2_cardcol_'+k, rec?'1':'0'); }
 function aplicarCardCols(){ document.querySelectorAll('[data-cardkey]').forEach(el=>{ if(localStorage.getItem('simpesca2_cardcol_'+el.dataset.cardkey)==='1'){ const c=el.closest('.card'); if(c) c.classList.add('card-colapsado'); } }); }
+// mostra só a seção do hash (calibracao/controle/motor/gerador); trocar o hash NÃO recarrega -> Bluetooth continua
+function mostrarSecao(){
+  const sec=(location.hash||'').replace('#','')||'controle';
+  document.querySelectorAll('.card[data-sec]').forEach(c=>{
+    const on=(c.getAttribute('data-sec')===sec);
+    c.style.display = on ? '' : 'none';
+    if(on) c.classList.remove('card-colapsado');   // seção ativa sempre expandida
+  });
+}
+window.addEventListener('hashchange', mostrarSecao);
+mostrarSecao();   // mostra a seção certa já no carregamento (independe do init)
 // Reordena os cards estáticos: Carretel no TOPO · Controle Manual + Encoder DEPOIS das simulações (antes do export)
 function reordenarCards(){
   const card=k=>{ const t=document.querySelector('[data-cardkey="'+k+'"]'); return t?t.closest('.card'):null; };
@@ -1256,6 +1276,7 @@ window.addEventListener('load',async()=>{
   atualizarInterfaceTempo(); renderTodas(); atualizarGauge(0); atualizarCalLive(); atualizarContadores(); atualizarEstimativas();
   reordenarCards();            // Carretel no topo · Controle Manual + Encoder depois das sims
   aplicarCardCols();           // recolhe os cards de config que estavam recolhidos
+  mostrarSecao();              // mostra só a seção do menu (hash)
   if(localStorage.getItem('simpesca2_carretel_btns')==='0'){ const cc=document.getElementById('carretelCtrls'); if(cc) cc.style.display='none'; }   // estado salvo do "🔧 botões"
   reconectar();
   // auto-save GitHub: preenche o token salvo, mostra o status e retoma pendências

@@ -90,6 +90,8 @@ input[type=text]:focus{border-color:var(--accent);}
 #hudSync .hs-val{min-width:46px;text-align:center;font-family:monospace;font-weight:800;}
 #hudTeste{position:fixed;bottom:14px;left:14px;z-index:64;display:none;align-items:center;gap:8px;background:rgba(0,0,0,0.6);border:1px solid #4aa3ff;border-radius:22px;padding:5px 10px 5px 13px;color:#8cc6ff;font-size:0.85rem;font-weight:700;}
 #hudTeste.visivel{display:flex;}
+#hudCorrente{position:fixed;top:14px;left:14px;z-index:64;display:none;background:rgba(0,0,0,0.6);border:1px solid #ffd24a;border-radius:22px;padding:6px 14px;color:#ffe08a;font-size:1.05rem;font-weight:800;pointer-events:none;white-space:nowrap;font-family:monospace;}
+#hudCorrente.visivel{display:block;}
 #hudTeste button{background:rgba(74,163,255,0.16);border:1px solid #4aa3ff;color:#8cc6ff;border-radius:13px;font-family:inherit;font-size:0.82rem;font-weight:800;padding:5px 11px;cursor:pointer;}
 #hudTeste button:active{background:rgba(74,163,255,0.38);}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,212,255,0.15);border:1px solid rgba(0,212,255,0.4);border-radius:20px;padding:6px 18px;font-size:0.7rem;color:var(--accent);pointer-events:none;opacity:0;transition:opacity .3s;z-index:200;white-space:nowrap;}
@@ -125,6 +127,7 @@ input[type=text]:focus{border-color:var(--accent);}
 <div id="hudTimeline"><canvas id="tlCanvas" width="600" height="80"></canvas></div>
 <div id="hudSync"><span>⏱</span><button onclick="nudgeSync(-0.2)">−0.2</button><span class="hs-val" id="hudSyncVal">0.0s</span><button onclick="nudgeSync(0.2)">+0.2</button></div>
 <div id="hudTeste"><span>🧪</span><button onclick="simEncoder(1)">🎣 +1m</button><button onclick="simEncoder(-1)">🐟 −1m</button></div>
+<div id="hudCorrente">⚡ 0.0 A · máx 0.0</div>
 
 <div class="fs-overlay" id="nomeOverlay">
   <div class="lbl">Quem vai pescar?</div>
@@ -155,6 +158,7 @@ input[type=text]:focus{border-color:var(--accent);}
   <div class="lbl" id="lblGeral" style="margin-top:10px;">Colocação</div>
   <div class="posicao-grande" id="resultadoPos">—</div>
   <div class="lbl" id="resultadoNome">—</div>
+  <div class="lbl" id="resultadoCorrente" style="display:none;margin-top:8px;color:#ffe08a;"></div>
   <div class="fs-btns"><button class="btn-fs btn-ok" onclick="location.href='ranking.html'">🏆 Ver ranking</button><button class="btn-fs btn-sec" onclick="fecharResultado()">Fechar</button></div>
 </div>
 <div id="carretelBar">Carretel: 0.0 m</div>
@@ -174,9 +178,11 @@ const SERVICE_UUID="a1b2c3d4-0001-4a5b-8c6d-1234567890ab";
 const CHAR_MOTOR_UUID="a1b2c3d4-0002-4a5b-8c6d-1234567890ab";
 const CHAR_LINHA_UUID="a1b2c3d4-0003-4a5b-8c6d-1234567890ab";
 const CHAR_CONFIG_UUID="a1b2c3d4-0004-4a5b-8c6d-1234567890ab";
-let bleDevice=null, motorChar=null, linhaChar=null, configChar=null, contagemEncoder=(parseInt(localStorage.getItem('simpesca2_contagem_encoder'))||0);
+const CHAR_CORRENTE_UUID="a1b2c3d4-0005-4a5b-8c6d-1234567890ab";   // corrente do motor (VESC) — int16 LE = A×100, notify
+let bleDevice=null, motorChar=null, linhaChar=null, configChar=null, correnteChar=null, contagemEncoder=(parseInt(localStorage.getItem('simpesca2_contagem_encoder'))||0);
 function salvarContagem(){ try{ localStorage.setItem('simpesca2_contagem_encoder', String(Math.round(contagemEncoder))); }catch(e){} }   // carretel COMPARTILHADO entre dash/desafio/player (mesma bobina)
 let contAnt=0, primeiraLeitura=true, metrosGanhos=0, metrosPerdidos=0, contando=false;
+let correnteA=0, correnteMax=0, correnteOk=false, jamDesde=0;   // ⚡ corrente ao vivo, máx da jogada, se o ESP manda corrente, e desde quando está acima do limite
 function btUI(c,t){ if(window.menuStatusConexao) window.menuStatusConexao(c==='ok', t); }   // reflete no botão Conectar do menu
 async function conectarBLE(){
   if(!navigator.bluetooth){ alert('Sem Web Bluetooth. Use Chrome/Edge no PC ou Android.'); return; }
@@ -186,7 +192,7 @@ async function conectarBLE(){
 async function ligar(device){
   bleDevice=device;
   device.addEventListener('gattserverdisconnected',()=>{
-    motorChar=null; linhaChar=null; configChar=null; btUI('erro','🔵 Reconectar'); mostrarToast('⚠ Bluetooth caiu — motor travado');
+    motorChar=null; linhaChar=null; configChar=null; correnteChar=null; correnteOk=false; btUI('erro','🔵 Reconectar'); mostrarToast('⚠ Bluetooth caiu — motor travado');
     // SEGURANÇA: pausa qualquer simulação em andamento ao perder a conexão
     Object.keys(SIMS).forEach(id=>{ if(SIMS[id].estaRodando) pausarSim(id); });
   });
@@ -206,7 +212,38 @@ async function ligar(device){
     });
   }catch(e){}
   try{ configChar=await service.getCharacteristic(CHAR_CONFIG_UUID); enviarConfigRPM(); }catch(e){ configChar=null; }
+  try{   // ⚡ corrente do motor (opcional — só se o firmware do ESP tiver a característica 0005)
+    correnteChar=await service.getCharacteristic(CHAR_CORRENTE_UUID);
+    await correnteChar.startNotifications();
+    correnteChar.addEventListener('characteristicvaluechanged', e=>{ onCorrente(e.target.value.getInt16(0,true)/100); });
+    correnteOk=true;
+  }catch(e){ correnteChar=null; correnteOk=false; }
   btUI('conectado','🟢 Conectado'); mostrarToast('Bluetooth conectado');
+}
+// ⚡ ── Corrente / travamento de linha ──────────────────────────
+function jamAtivo(){ return localStorage.getItem('simpesca2_jam_ativo')!=='0'; }        // padrão: ligado
+function jamLimite(){ const v=parseFloat(localStorage.getItem('simpesca2_jam_limite')); return isFinite(v)?v:30; }
+function jamMs(){ const v=parseFloat(localStorage.getItem('simpesca2_jam_ms')); return isFinite(v)?v:400; }
+function onCorrente(a){
+  correnteA=a;
+  if(contando && Math.abs(a)>correnteMax) correnteMax=Math.abs(a);
+  atualizarHudCorrente();
+  checarTravamento(a);
+}
+function atualizarHudCorrente(){ const el=document.getElementById('hudCorrente'); if(el) el.textContent='⚡ '+correnteA.toFixed(1)+' A · máx '+correnteMax.toFixed(1); }
+function checarTravamento(a){
+  if(!contando || !jamAtivo()){ jamDesde=0; return; }
+  if(Math.abs(a) >= jamLimite()){
+    if(!jamDesde) jamDesde=Date.now();
+    else if(Date.now()-jamDesde >= jamMs()) dispararTravamento();
+  } else jamDesde=0;
+}
+function dispararTravamento(){
+  jamDesde=0;
+  aplicarMotor(0);                                   // PARA o motor na hora (segurança)
+  const id=(simTocando!=null)?simTocando:simEmPausa;
+  if(id!=null && SIMS[id] && SIMS[id].estaRodando) pausarSim(id);
+  mostrarToast('⚠️ Linha travada — simulação pausada ('+correnteA.toFixed(0)+' A)');
 }
 // ── Fisgada física (puxadas do motor no início) ───────────────
 const FISFIS_GLOBAL={fisfispot:'simpesca2_fisfis_pot', fisfisvoltas:'simpesca2_fisfis_voltas', fisfisdur:'simpesca2_fisfis_dur'};
@@ -534,7 +571,7 @@ function aplicarMotor(pct, estadoRaw){ pct=Math.max(-100,Math.min(100,pct));
 let simTocando=null, tlRAF=null, emJogo=false;
 const TL_PASSADO=1.4, TL_FUTURO=6.0;   // segundos à esquerda (passado) e à direita (futuro) do "AGORA"
 const ESC_POS=40, ESC_NEG=-20, ESC_RANGE=ESC_POS-ESC_NEG;   // escala da barra (igual ao dashboard): +40 puxa (topo) · -20 freia (base) · 0 a ~⅔
-const hudCfg={linha:true, estado:true, barra:true, carretel:true, sync:true, peso:true, teste:true, premioBone:true, premioBoia:true};
+const hudCfg={linha:true, estado:true, barra:true, carretel:true, sync:true, peso:true, teste:true, premioBone:true, premioBoia:true, corrente:false};
 function premioBoneMinVal(){ const v=parseFloat(localStorage.getItem('simpesca2_premio_bone_min')); return isFinite(v)?v:30; }   // 🧢 boné (prêmio MAIOR) acima de X m
 function premioBoiaMinVal(){ const v=parseFloat(localStorage.getItem('simpesca2_premio_boia_min')); return isFinite(v)?v:15; }   // 🛟 boia (prêmio menor) acima de X m
 function loopTimeline(){ tlRAF=requestAnimationFrame(loopTimeline); if(simTocando!=null) desenharTimeline(SIMS[simTocando]); }
@@ -579,6 +616,7 @@ function atualizarVisibilidadeHUD(){
   document.getElementById('hudCarretel').classList.toggle('visivel', emJogo && hudCfg.carretel);
   document.getElementById('hudSync').classList.toggle('visivel', emJogo && hudCfg.sync);
   document.getElementById('hudTeste').classList.toggle('visivel', emJogo && hudCfg.teste);   // botões de teste (sem hardware) durante o jogo
+  document.getElementById('hudCorrente').classList.toggle('visivel', emJogo && hudCfg.corrente);   // ⚡ corrente do motor
   if(emJogo && hudCfg.sync) atualizarHudSync();
   const rodar = simTocando!=null && hudCfg.barra;
   if(rodar){ if(!tlRAF) tlRAF=requestAnimationFrame(loopTimeline); }
@@ -603,6 +641,7 @@ function carregarHudCfg(){   // o jogo SÓ LÊ as preferências (a edição est�
   const g=(k,d)=>{ const v=localStorage.getItem(k); return v===null?d:v==='1'; };
   hudCfg.linha=g('simpesca2_hud_linha',true); hudCfg.estado=g('simpesca2_hud_estado',true); hudCfg.barra=g('simpesca2_hud_barra',true); hudCfg.carretel=g('simpesca2_hud_carretel',true); hudCfg.sync=g('simpesca2_hud_sync',true); hudCfg.peso=g('simpesca2_hud_peso',true); hudCfg.teste=g('simpesca2_mostrar_teste',true);
   hudCfg.premioBone=g('simpesca2_hud_premio_bone',true); hudCfg.premioBoia=g('simpesca2_hud_premio_boia',true);
+  hudCfg.corrente=g('simpesca2_hud_corrente',false);
   atualizarSyncCards(); atualizarPesoCards(); aplicarVisibilidadePeixes();
 }
 
@@ -657,7 +696,7 @@ function confirmarNome(){ const v=document.getElementById('inputNome').value.tri
 document.getElementById('inputNome').addEventListener('keydown',e=>{ if(e.key==='Enter') confirmarNome(); });
 
 // Leva os overlays (contagem/pausa/resultado) pra DENTRO do vídeo (aparecerem em tela cheia) e devolve depois
-const OVERLAYS_FS=['countdownOverlay','pauseOverlay','resultadoOverlay','hudLinha','hudEstado','hudCarretel','hudTimeline','hudSync','hudTeste'];
+const OVERLAYS_FS=['countdownOverlay','pauseOverlay','resultadoOverlay','hudLinha','hudEstado','hudCarretel','hudTimeline','hudSync','hudTeste','hudCorrente'];
 function moverOverlaysPara(parent){ OVERLAYS_FS.forEach(id=>parent.appendChild(document.getElementById(id))); }
 function devolverOverlays(){ OVERLAYS_FS.forEach(id=>document.body.appendChild(document.getElementById(id))); }
 window.addEventListener('keydown', e=>{ if(!emJogo || !hudCfg.teste) return; if(e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return; if(e.key==='ArrowUp'){ simEncoder(1); e.preventDefault(); } else if(e.key==='ArrowDown'){ simEncoder(-1); e.preventDefault(); } });   // ↑ recolhe 1m · ↓ solta 1m (teste sem hardware)
@@ -706,6 +745,7 @@ function iniciarSim(id){
   enviarConfigRPM(freioRepousoEscalado(id), freioPosSimA(id)); enviarRepouso(true);   // jogada começou -> manda freio de repouso + freio pós-sim (ambos por peso) + ativa
   sim.overlay.classList.add('oculto');
   novoJogoContadores();                    // novo jogador: zera só a contagem do jogo; a linha do carretel acumula
+  correnteMax=0; jamDesde=0; atualizarHudCorrente();   // ⚡ zera a corrente máx da nova jogada
   emJogo=true; simTocando=id; atualizarVisibilidadeHUD();
   sim.video.currentTime=0; sim.video.play().catch(()=>{});
   contando=false;                          // durante o atraso de sincronia (intro do vídeo) não conta
@@ -748,6 +788,8 @@ function mostrarPremio(metros, salvou){   // 🎁 mostra SÓ o maior prêmio con
 }
 function mostrarResultado(nome, metros, sim, salvou){
   document.getElementById('resultadoMetros').textContent=metros.toFixed(1)+' m';
+  const corrEl=document.getElementById('resultadoCorrente');   // ⚡ corrente máx (base pra calibrar o limite)
+  if(correnteOk){ corrEl.textContent='⚡ Corrente máx nesta jogada: '+correnteMax.toFixed(1)+' A'; corrEl.style.display='block'; } else corrEl.style.display='none';
   mostrarPremio(metros, salvou);
   const posEl=document.getElementById('resultadoPos'), nomeEl=document.getElementById('resultadoNome'), rec=document.getElementById('resultadoRecorde');
   const lblG=document.getElementById('lblGeral');

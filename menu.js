@@ -13,10 +13,10 @@
   // --- itens do menu lateral (drawer) ---
   const LINKS=[
     {ic:'⚙️', nome:'Configuração de exibição', pg:'exibicao.html',        id:'exibicao'},
-    {ic:'📏', nome:'Calibração do encoder',     pg:'motor.html',           id:'motor'},
-    {ic:'🎚️', nome:'Controle manual',           pg:'motor.html',           id:'motor'},
-    {ic:'🔧', nome:'Configuração do motor',     pg:'motor.html',           id:'motor'},
-    {ic:'🎬', nome:'Gerador de simulações curtas', pg:'motor.html',        id:'motor'},
+    {ic:'📏', nome:'Calibração do encoder',     pg:'motor.html#calibracao', id:'motor'},
+    {ic:'🎚️', nome:'Controle manual',           pg:'motor.html#controle',   id:'motor'},
+    {ic:'🔧', nome:'Configuração do motor',     pg:'motor.html#motor',      id:'motor'},
+    {ic:'🎬', nome:'Gerador de simulações curtas', pg:'motor.html#gerador', id:'motor'},
     {ic:'🐟', nome:'Gerador de simulação desafio', pg:'desafio.html', id:'desafio'},
     {ic:'🏆', nome:'Ranking',                    pg:'ranking.html',         id:'ranking'},
     {ic:'🔗', nome:'Conexão GitHub',             pg:'github.html',          id:'github'},
@@ -114,6 +114,7 @@
   document.getElementById('mnuHamb').addEventListener('click', abrir);
   document.getElementById('mnuFechar').addEventListener('click', fechar);
   back.addEventListener('click', fechar);
+  drw.querySelectorAll('.mnu-link').forEach(a=>a.addEventListener('click', fechar));   // fecha a gaveta ao escolher (inclusive quando é só troca de #hash, sem recarregar)
 
   // --------------------------------------------------------------- API de conexão p/ a página
   window.menuStatusConexao=function(ok, txt){

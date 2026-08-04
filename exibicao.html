@@ -52,6 +52,15 @@ input[type=number]{width:70px;background:#0d151d;border:1px solid var(--accent);
   </div>
 
   <div class="grupo">
+    <div class="grupo-tit">⚡ Corrente do motor (segurança)</div>
+    <label class="linha"><input type="checkbox" id="cfgCorrente"> Mostrar a corrente na tela do jogo</label>
+    <label class="linha"><input type="checkbox" id="cfgJam"> Pausar automático se a linha travar (corrente alta)</label>
+    <label class="linha">Limite de travamento <input type="number" id="jamLimite" min="0" step="1"> A</label>
+    <label class="linha">sustentada por <input type="number" id="jamMs" min="50" step="50"> ms</label>
+    <div class="dica">Como calibrar: ligue "Mostrar corrente", jogue uma vez normal no Enrola mais e veja a <b>corrente máxima</b> da jogada; depois ponha o limite um pouco acima disso. (Precisa do firmware do ESP mandando a corrente.)</div>
+  </div>
+
+  <div class="grupo">
     <div class="grupo-tit">🐟 Peixes na tela de seleção</div>
     <div id="cfgPeixes"></div>
     <div class="dica">Desmarcar esconde o card do peixe na tela de escolha do jogo.</div>
@@ -94,6 +103,14 @@ bindCheck('cfgPremioBone','simpesca2_hud_premio_bone',true);
 bindCheck('cfgPremioBoia','simpesca2_hud_premio_boia',true);
 bindNum('premioBoneMin','simpesca2_premio_bone_min',premioBoneMinVal);
 bindNum('premioBoiaMin','simpesca2_premio_boia_min',premioBoiaMinVal);
+
+// ⚡ corrente / travamento
+function jamLimiteVal(){ const v=parseFloat(localStorage.getItem('simpesca2_jam_limite')); return isFinite(v)?v:30; }
+function jamMsVal(){ const v=parseFloat(localStorage.getItem('simpesca2_jam_ms')); return isFinite(v)?v:400; }
+bindCheck('cfgCorrente','simpesca2_hud_corrente',false);
+bindCheck('cfgJam','simpesca2_jam_ativo',true);
+bindNum('jamLimite','simpesca2_jam_limite',jamLimiteVal);
+bindNum('jamMs','simpesca2_jam_ms',jamMsVal);
 
 // peixes na tela
 (function(){
