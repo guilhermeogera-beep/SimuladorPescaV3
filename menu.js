@@ -13,11 +13,11 @@
   // --- itens do menu lateral (drawer) ---
   const LINKS=[
     {ic:'⚙️', nome:'Configuração de exibição', pg:'exibicao.html',        id:'exibicao'},
-    {ic:'📏', nome:'Calibração do encoder',     pg:'calibracao.html',      id:'calibracao'},
+    {ic:'📏', nome:'Calibração do encoder',     pg:'motor.html',           id:'motor'},
+    {ic:'🎚️', nome:'Controle manual',           pg:'motor.html',           id:'motor'},
     {ic:'🔧', nome:'Configuração do motor',     pg:'motor.html',           id:'motor'},
-    {ic:'🎚️', nome:'Controle manual',           pg:'controle.html',        id:'controle'},
-    {ic:'🎬', nome:'Gerador de simulações curtas', pg:'gerador-curtas.html', id:'gerador-curtas'},
-    {ic:'🐟', nome:'Gerador de simulação desafio', pg:'gerador-desafio.html', id:'gerador-desafio'},
+    {ic:'🎬', nome:'Gerador de simulações curtas', pg:'motor.html',        id:'motor'},
+    {ic:'🐟', nome:'Gerador de simulação desafio', pg:'desafio.html', id:'desafio'},
     {ic:'🏆', nome:'Ranking',                    pg:'ranking.html',         id:'ranking'},
     {ic:'🔗', nome:'Conexão GitHub',             pg:'github.html',          id:'github'},
     {ic:'↔️', nome:'Importação / exportação',    pg:'importexport.html',    id:'importexport'}
